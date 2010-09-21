@@ -1,0 +1,159 @@
+require 'logger'
+
+#
+# CONFIG CONSTANTS
+# 
+
+ENV['LANG'] = 'C'
+JAVA_BIN = "/usr/java/default/bin/java"
+ABIQUO_BASE_DIR='/opt/abiquo'
+TOMCAT_DIR='/opt/abiquo/tomcat'
+TOMCAT_PID_FILE = '/opt/abiquo/tomcat/work/catalina.pid'
+ABIQUO_VERSION = "1.6"
+ABIQUO_SERVER_CONFIG = '/opt/abiquo/config/server.xml'
+ABIQUO_VIRTUALFACTORY_CONFIG = '/opt/abiquo/config/virtualfactory.xml'
+ABIQUO_VSM_CONFIG = '/opt/abiquo/config/vsm.xml'
+ABIQUO_NODECOLLECTOR_CONFIG = '/opt/abiquo/config/nodecollector.xml'
+ABIQUO_AM_CONFIG = '/opt/abiquo/config/am.xml'
+ABIQUO_BPMASYNC_CONFIG = '/opt/abiquo/config/bpm-async.xml'
+
+#
+# INIT
+#
+Log = Logger.new "check.log"
+Log.level = Logger::INFO
+
+def abiquo_edition
+end
+
+def abiquo_base_dir
+  return ABIQUO_BASE_DIR
+end
+
+def tomcat_base_dir
+  return TOMCAT_DIR
+end
+
+def abiquo_installed?
+  return (File.directory?('/opt/abiquo') && RPMUtils.rpm_installed?('abiquo-core'))
+end
+
+def config_property(config, path)
+  config.root.xpath(path).text.chomp.strip
+end
+
+def abiquo_components_installed
+  c = Dir["#{TOMCAT_DIR}/webapps/*"].find_all { |d| File.directory? d }
+  c.map { |d| d.split('/').last }
+
+end
+
+def system_service_on?(service)
+  not `/sbin/chkconfig --list #{service}|grep 3:on`.empty?
+end
+
+def service_installed?(service_name)
+  File.exist?("/etc/rc.d/init.d/#{service_name}")
+end
+
+def abiquo_server_config
+  cfg = nil
+  if File.exist? ABIQUO_SERVER_CONFIG
+    cfg = Nokogiri::XML(File.new(ABIQUO_SERVER_CONFIG))
+  end
+  return cfg 
+end
+
+def abiquo_virtualfactory_config
+  cfg  = nil
+  if File.exist? ABIQUO_VIRTUALFACTORY_CONFIG
+    cfg= Nokogiri::XML(File.new(ABIQUO_VIRTUALFACTORY_CONFIG))
+  end
+  return cfg
+end
+
+
+def abiquo_vsm_config
+  cfg = nil
+  if File.exist? ABIQUO_VSM_CONFIG
+    cfg = Nokogiri::XML(File.new(ABIQUO_VSM_CONFIG))
+  end
+  return cfg
+end
+
+def abiquo_nodecollector_config 
+  cfg = nil
+  if File.exist? ABIQUO_NODECOLLECTOR_CONFIG
+    cfg = Nokogiri::XML(File.new(ABIQUO_NODECOLLECTOR_CONFIG))
+  end
+  return cfg
+end
+
+def abiquo_am_config 
+  cfg = nil
+  if File.exist? ABIQUO_AM_CONFIG
+    cfg = Nokogiri::XML(File.new(ABIQUO_AM_CONFIG))
+  end
+end
+
+def abiquo_bpmasync_config
+  cfg = nil
+  if File.exist? ABIQUO_BPMASYNC_CONFIG
+    cfg = Nokogiri::XML(File.new(ABIQUO_BPMASYNC_CONFIG))
+  end
+  return cfg
+end
+
+module AETK
+
+  module OutputFormatters
+    
+    def two_cols(first, second, justification = 40) 
+      puts "#{first}".ljust(justification) + "#{second}"
+    end
+
+  end
+
+  def detect_install_type
+    if RPMUtils.rpm_installed? 'abiquo-16-pocsetup'
+      return :monolithic
+    end
+    
+    if RPMUtils.rpm_installed? 'abiquo-remote-services'
+      return :remote_services
+    end
+    
+    if RPMUtils.rpm_installed? 'abiquo-v2v'
+      return :remote_v2v
+    end
+
+    if RPMUtils.rpm_installed? 'abiquo-server'
+      return :server
+    end
+    return :unknown
+
+  end
+
+
+  def self.load_plugins(extra_plugins_dir = nil)
+    puts "Loading plugins...".yellow.bold
+    plugins = Dir[File.dirname(__FILE__) + '/checks/*.rb'].sort
+    if extra_plugins_dir and File.directory? extra_plugins_dir
+      puts "Loading extra plugins...".yellow.bold
+      plugins.concat( Dir[extra_plugins_dir + '/*.rb'].sort )
+    end
+    if Log.level == Logger::DEBUG
+      plugins.each do |p|
+        puts "  #{File.basename(p,'.rb')}..."
+      end
+    end
+    plugins.each do |p|
+      $stdout.sync = true
+      load p
+    end
+
+  end
+
+end
+
+

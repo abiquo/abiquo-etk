@@ -1,0 +1,185 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'nokogiri'
+require 'term/ansicolor'
+
+class String
+  include Term::ANSIColor
+end
+
+begin
+  require 'lib/abiquo-etk'
+rescue LoadError
+  require 'abiquo-etk'
+end
+
+include AETK::OutputFormatters
+
+
+def config_set_node(cf, path, val)
+	cf.root.xpath(path).first.content = (val || '')
+end
+
+def config_get_node(cf, path)
+	cf.root.xpath(path).first.text rescue nil
+end
+
+def config_set_attribute(cf, path, attrname, val)
+	cf.root.xpath(path).first[attrname] = (val||'')
+end
+
+def config_get_attribute(cf, path, attrname)
+	cf.root.xpath(path).first[attrname] rescue nil
+end
+
+def help
+  $stderr.puts 
+  $stderr.puts "AETK HELP"
+  $stderr.puts "---------" 
+  $stderr.puts 
+  $stderr.puts "Setting properties:"
+  $stderr.puts "#{$0} set <component> <path> <value>"
+  $stderr.puts
+  $stderr.puts "Getting properties:"
+  $stderr.puts "#{$0} get <component> <path>"
+  $stderr.puts
+  $stderr.puts "Setting attributes:"
+  $stderr.puts "#{$0} setattr (<component>|<file>) <path> <attrname> <value>"
+  $stderr.puts
+  $stderr.puts "Print Hypervisors passwords:"
+  $stderr.puts "#{$0} passwords"
+end
+
+def print_hv_user
+  vsm_cfg  = abiquo_vsm_config
+  nc_cfg  = abiquo_nodecollector_config
+  vf_cfg = abiquo_virtualfactory_config
+ 
+  sc = vsm_cfg
+  puts
+  puts "VIRTUAL SYSTEM MONITOR"
+  puts "----------------------"
+  puts  
+  two_cols("  VMWARE User:", "#{config_get_node(sc, 'hypervisors/vmware/user')}")
+  two_cols("  Hyper-V User:", "#{config_get_node(sc, 'hypervisors/hyperv/user')}")
+  two_cols("  LibVirt User:", "#{config_get_node(sc, 'hypervisors/libvirtAgent/user')}")
+  two_cols("  XenServer User:", "#{config_get_node(sc, 'hypervisors/xenserver/user')}")
+  
+  sc = nc_cfg
+  puts
+  puts "NODE COLLECTOR"
+  puts "--------------"
+  puts  
+  two_cols("  VMWARE User:", "#{config_get_node(sc, 'hypervisors/esxi/user')}")
+  two_cols("  Hyper-V User:", "#{config_get_node(sc, 'hypervisors/hyperv/user')}")
+  two_cols("  LibVirt User:", "#{config_get_node(sc, 'wsman/user')}")
+  two_cols("  XenServer User:", "#{config_get_node(sc, 'hypervisors/xenserver/user')}")
+  
+  sc = vf_cfg
+  puts
+  puts "VIRTUAL FACTORY"
+  puts "---------------"
+  puts  
+  two_cols("  VMWARE User:", "#{config_get_node(sc, 'hypervisors/vmware/user')}")
+  two_cols("  Hyper-V User:", "#{config_get_node(sc, 'hypervisors/hyperv/user')}")
+  two_cols("  LibVirt User:", "#{config_get_node(sc, 'rimp/user')}")
+  two_cols("  XenServer User:", "#{config_get_node(sc, 'hypervisors/xenserver/user')}")
+
+end
+
+def print_hv_password
+  vsm_cfg  = abiquo_vsm_config
+  nc_cfg  = abiquo_nodecollector_config
+  vf_cfg = abiquo_virtualfactory_config
+ 
+  sc = vsm_cfg
+  puts
+  puts "VIRTUAL SYSTEM MONITOR"
+  puts "----------------------"
+  puts  
+  two_cols("  VMWARE Password:", "#{config_get_node(sc, 'hypervisors/vmware/password')}")
+  two_cols("  Hyper-V Password:", "#{config_get_node(sc, 'hypervisors/hyperv/password')}")
+  two_cols("  LibVirt Password:", "#{config_get_node(sc, 'hypervisors/libvirtAgent/password')}")
+  two_cols("  XenServer Password:", "#{config_get_node(sc, 'hypervisors/xenserver/password')}")
+  
+  sc = nc_cfg
+  puts
+  puts "NODE COLLECTOR"
+  puts "--------------"
+  puts  
+  two_cols("  VMWARE Password:", "#{config_get_node(sc, 'hypervisors/esxi/password')}")
+  two_cols("  Hyper-V Password:", "#{config_get_node(sc, 'hypervisors/hyperv/password')}")
+  two_cols("  LibVirt Password:", "#{config_get_node(sc, 'wsman/password')}")
+  two_cols("  XenServer Password:", "#{config_get_node(sc, 'hypervisors/xenserver/password')}")
+  
+  sc = vf_cfg
+  puts
+  puts "VIRTUAL FACTORY"
+  puts "---------------"
+  puts  
+  two_cols("  VMWARE Password:", "#{config_get_node(sc, 'hypervisors/vmware/password')}")
+  two_cols("  Hyper-V Password:", "#{config_get_node(sc, 'hypervisors/hyperv/password')}")
+  two_cols("  LibVirt Password:", "#{config_get_node(sc, 'rimp/password')}")
+  two_cols("  XenServer Password:", "#{config_get_node(sc, 'hypervisors/xenserver/password')}")
+
+end
+
+op = ARGV[0]
+if op == 'set'
+  comp = ARGV[1]
+  path = ARGV[2]
+  val = ARGV[3]
+  file = File.join(ABIQUO_BASE_DIR, "config/#{comp}.xml")
+  if File.exist? comp
+	file = comp
+  end
+  doc = Nokogiri::XML(File.new(file))
+  begin
+    config_set_node(doc, path, val)
+    File.open(file, 'w') do |f|
+      f.puts doc.to_xml
+    end
+  rescue NoMethodError 
+    $stderr.puts "\nproperty #{path.bold} not found in component #{comp.bold}\n\n"
+    exit 1
+  end
+elsif op == 'setattr'
+  comp = ARGV[1]
+  path = ARGV[2]
+  attrname = ARGV[3]
+  val = ARGV[4]
+  file = File.join(ABIQUO_BASE_DIR, "config/#{comp}.xml")
+  if File.exist? comp
+	file = comp
+  end
+  doc = Nokogiri::XML(File.new(file))
+  config_set_attribute(doc, path, attrname, val)
+  File.open(file, 'w') do |f|
+    f.puts doc.to_xml
+  end
+elsif op == 'get'
+  comp = ARGV[1]
+  path = ARGV[2]
+  if comp.nil? or path.nil?
+    $stderr.puts
+    $stderr.puts "<component> or <path> missing."
+    help
+    exit 1
+  end
+  file = File.join(ABIQUO_BASE_DIR, "config/#{comp}.xml")
+  if not File.exist? file
+    $stderr.puts "Component config not found (#{comp}.xml)"
+    exit 1
+  end
+  doc = Nokogiri::XML(File.new(file))
+  puts config_get_node(doc, path)
+elsif op == 'passwords'
+  print_hv_password
+elsif op == 'users'
+  print_hv_user
+elsif op == 'help'
+  help
+else
+  help
+end

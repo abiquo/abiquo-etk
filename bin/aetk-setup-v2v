@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+require 'logger'
+
+CONFIG_FILE='/etc/sysconfig/abiquo-server'
+TOMCAT_BPMASYNC_CONFIG ='/opt/abiquo/tomcat/conf/Catalina/localhost/bpm-async.xml'
+TOMCAT_BPMASYNC_BUILTIN_CONFIG = '/opt/abiquo/tomcat/webapps/bpm-async/META-INF/context.xml'
+
+Log = Logger.new('/var/log/abiquo-etk.log')
+Log.level = Logger::INFO
+
+def tomcat_bpmasync_config
+  if File.exist? TOMCAT_BPMASYNC_CONFIG
+    return TOMCAT_BPMASYNC_CONFIG
+  elsif File.exist? TOMCAT_BPMASYNC_BUILTIN_CONFIG
+    return TOMCAT_BPMASYNC_BUILTIN_CONFIG
+  else
+    return '' 
+  end
+end
+
+begin
+	@settings = {}
+	if File.exist? CONFIG_FILE
+		File.read(CONFIG_FILE).each_line do |l|
+			next if l.strip.chomp.empty?
+			key,val = l.strip.chomp.split('=')
+			@settings[key.strip.chomp] = val.strip.chomp rescue ''
+		end
+
+	else
+		Log.error "Config file #{CONFIG_FILE} does not exist. Exit."
+		exit
+	end
+
+	if File.exist? tomcat_bpmasync_config
+	  Log.info "Setting db user/password in localhost bpm-async context.xml"
+	  `aetk setattr #{tomcat_bpmasync_config} 'Resource[@name="jdbc/abiquoBpmDB"]' url 'jdbc:mysql://#{@settings['abiquo_db_host']}:3306/kinton?autoReconnect=true'`
+		`aetk setattr #{tomcat_bpmasync_config} 'Resource[@name="jdbc/abiquoBpmDB"]' password #{@settings['abiquo_db_password']}`
+		`aetk setattr #{tomcat_bpmasync_config} 'Resource[@name="jdbc/abiquoBpmDB"]' username root`
+  else
+    Log.warn 'BPM ASYNC config not found, skipping config'
+	end
+rescue Exception => e
+	Log.error "Unhandled exception: #{e.message}"
+	Log.error "Unhandled exception: #{e.backtrace}"
+end
+
+

@@ -1,0 +1,1 @@
+sed -i 's/tcp:\/\/localhost/tcp:\/\/0.0.0.0/' /opt/abiquo/tomcat/webapps/bpm-async/WEB-INF/classes/activemq.xml

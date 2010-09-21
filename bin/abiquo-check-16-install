@@ -1,0 +1,136 @@
+#!/usr/bin/env ruby
+
+if `whoami`.strip.chomp != 'root'
+  puts 'You need to run this as root.'
+  exit
+end
+
+require 'rubygems'
+require 'term/ansicolor'
+require 'rpm-utils'
+require 'logger'
+require 'nokogiri'
+require 'mixlib/cli'
+
+begin
+  require 'lib/abiquo-etk'
+rescue LoadError
+  require 'abiquo-etk'
+end
+
+class String
+  include Term::ANSIColor
+end
+
+
+def print_server_config
+  puts "SERVER CONFIG".bold
+  puts "-------------"
+  sc = abiquo_server_config
+  puts "  Version: #{config_property(sc, 'abicloud/version')}"
+  puts "  Event Sink Address: #{config_property(sc, 'eventSinkAddress')}"
+  puts "  API Location: #{config_property sc, 'apiLocation'}"
+  puts "  Repository Space: #{config_property(sc,'repositorySpace')}"
+  puts "  Session Timeout: #{config_property(sc, 'sessionTimeout')}"
+end
+
+def print_virtualfactory_config
+  puts "VIRTUAL FACTORY".bold
+  puts "---------------"
+  sc = abiquo_virtualfactory_config
+  two_cols("  Hyper-V LocalRepo:", "#{config_property(sc, 'hypervisors/hyperv/localRepositoryPath')}")
+  two_cols("  Hyper-V DestRepo:", "#{config_property(sc, 'hypervisors/hyperv/destinationRepositoryPath')}")
+end
+
+def print_vsm_config
+  puts "VIRTUAL SYSTEM MONITOR".bold
+  puts "----------------------"
+  sc = abiquo_vsm_config
+  two_cols("  VMWARE User:", "#{config_property(sc, 'hypervisors/vmware/user')}")
+  two_cols("  VMWARE Password:", "#{config_property(sc, 'hypervisors/vmware/password')}")
+  two_cols("  Hyper-V User:", "#{config_property(sc, 'hypervisors/hyperv/user')}")
+  two_cols("  Hyper-V Password:", "#{config_property(sc, 'hypervisors/hyperv/password')}")
+  two_cols("  LibVirt User:", "#{config_property(sc, 'hypervisors/libvirtAgent/user')}")
+  two_cols("  LibVirt Password:", "#{config_property(sc, 'hypervisors/libvirtAgent/password')}")
+  two_cols("  LibVirt Port:", "#{config_property(sc, 'hypervisors/libvirtAgent/port')}")
+  two_cols("  XenServer User:", "#{config_property(sc, 'hypervisors/xenserver/user')}")
+  two_cols("  XenServer Password:", "#{config_property(sc, 'hypervisors/xenserver/password')}")
+end
+
+def print_nodecollector_config
+  puts "NODE COLLECTOR".bold
+  puts "--------------"
+  sc = abiquo_nodecollector_config
+  two_cols("  VMWARE User:", "#{config_property(sc, 'hypervisors/esxi/user')}")
+  two_cols("  VMWARE Password:", "#{config_property(sc, 'hypervisors/esxi/password')}")
+  two_cols("  Hyper-V User:", "#{config_property(sc, 'hypervisors/hyperv/user')}")
+  two_cols("  Hyper-V Password:", "#{config_property(sc, 'hypervisors/hyperv/password')}")
+  two_cols("  LibVirt User:", "#{config_property(sc, 'wsman/user')}")
+  two_cols("  LibVirt Password:", "#{config_property(sc, 'wsman/password')}")
+  two_cols("  LibVirt Port:", "#{config_property(sc, 'wsman/port')}")
+  two_cols("  XenServer User:", "#{config_property(sc, 'hypervisors/xenserver/user')}")
+  two_cols("  XenServer Password:", "#{config_property(sc, 'hypervisors/xenserver/password')}")
+end
+
+class MyCLI
+  include Mixlib::CLI
+
+  option :debug,
+    :long  => "--debug",
+    :description => "Set the log level to debug",
+    #:required => true,
+    :proc => Proc.new { |l| Log.level = Logger::DEBUG }
+  
+  option :print_configs,
+    :long  => "--print-configs",
+    :description => "Print Abiquo Configs"
+
+
+  option :extra_plugins,
+    :long => '--extra-plugins DIR',
+    :description => 'Extra plugins directory',
+    :default => nil
+
+  option :version,
+    :long => '--version',
+    :short => '-v',
+    :proc => Proc.new { puts "Abiquo Elite Toolkit Version " + File.read(File.dirname(__FILE__) + '/../VERSION') },
+    :exit => 0
+    
+
+  option :help,
+    :short => "-h",
+    :long => "--help",
+    :description => "Show this message",
+    :on => :tail,
+    :boolean => true,
+    :show_options => true,
+    :exit => 0
+
+end
+
+# ARGV = [ '-c', 'foo.rb', '-l', 'debug' ]
+cli = MyCLI.new
+cli.parse_options
+
+AETK.load_plugins(cli.config[:extra_plugins])
+include AETK::OutputFormatters
+
+
+if cli.config[:print_configs] 
+  # print config info
+  #
+  puts "\n"
+  if abiquo_components_installed.include? 'server'
+    print_server_config
+  end
+  puts "\n"
+  if abiquo_components_installed.include? 'virtualfactory'
+    print_virtualfactory_config
+  end
+  puts "\n"
+  if abiquo_components_installed.include? 'nodecollector'
+    print_nodecollector_config
+  end
+end
+

@@ -1,0 +1,44 @@
+#!/bin/sh
+VMWARE_PASSWORD='voycruzand0elrio'
+VMWARE_USER='root'
+HYPERV_USER='Administrador'
+HYPERV_PASSWORD='Windowssucks0!'
+XENSERVER_USER='root'
+XENSERVER_PASSWORD='voycruzand0elrio'
+DESTINATION_REPOSITORY_PATH='//10.60.1.39/vm_repository'
+ABIQUO_REPOSITORY='10.60.1.39:/opt/vm_repository'
+STORAGE_LINK_ADRESS='https://localhost:21605'
+
+
+
+#vmware
+aetk set nodecollector hypervisors/esxi/user $VMWARE_USER  
+aetk set vsm hypervisors/vmware/user $VMWARE_USER
+aetk set virtualfactory hypervisors/vmware/user $VMWARE_USER
+
+aetk set nodecollector hypervisors/esxi/password $VMWARE_PASSWORD 
+aetk set vsm hypervisors/vmware/password $VMWARE_PASSWORD
+aetk set virtualfactory hypervisors/vmware/password $VMWARE_PASSWORD
+
+# hyperv
+aetk set nodecollector hypervisors/hyperv/user $HYPERV_USER  
+aetk set vsm hypervisors/hyperv/user $HYPERV_USER
+aetk set virtualfactory hypervisors/hyperv/user $HYPERV_USER
+
+aetk set nodecollector hypervisors/hyperv/password $HYPERV_PASSWORD 
+aetk set vsm hypervisors/hyperv/password $HYPERV_PASSWORD
+aetk set virtualfactory hypervisors/hyperv/password $HYPERV_PASSWORD
+
+# xenserver 
+aetk set nodecollector hypervisors/xenserver/user $XENSERVER_USER 
+aetk set vsm hypervisors/xenserver/user $XENSERVER_USER
+aetk set virtualfactory hypervisors/xenserver/user $XENSERVER_USER
+
+aetk set nodecollector hypervisors/xenserver/password $XENSERVER_PASSWORD 
+aetk set vsm hypervisors/xenserver/password $XENSERVER_PASSWORD
+aetk set virtualfactory hypervisors/xenserver/password $XENSERVER_PASSWORD
+
+# rs params
+aetk set virtualfactory hypervisors/hyperv/destinationRepositoryPath $DESTINATION_REPOSITORY_PATH
+aetk set virtualfactory storagelink/address $STORAGE_LINK_ADRESS
+aetk set virtualfactory hypervisors/xenserver/abiquoRepository $ABIQUO_REPOSITORY

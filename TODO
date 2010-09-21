@@ -1,0 +1,6 @@
+* el Schema es detectado como Community cuando solo estan las tablas del BPM
+* Samba check
+* DHCP check
+* Hostname check
+* VirtualBox Check
+* JDK check

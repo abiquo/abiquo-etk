@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+require 'logger'
+
+CONFIG_FILE='/etc/sysconfig/abiquo-rs'
+
+Log = Logger.new('/var/log/abiquo-etk.log')
+Log.level = Logger::INFO
+
+begin
+	@settings = {}
+	if File.exist? CONFIG_FILE
+		File.read(CONFIG_FILE).each_line do |l|
+			next if l.strip.chomp.empty?
+			key,val = l.strip.chomp.split('=')
+			@settings[key.strip.chomp] = val.strip.chomp rescue ''
+		end
+
+	else
+		Log.error "Config file #{CONFIG_FILE} does not exist. Exit."
+		exit
+	end
+  `aetk set am repository/location #{@settings['abiquo_nfs_repository']}`
+  `aetk set virtualfactory hypervisors/xenserver/abiquoRepository #{@settings['abiquo_nfs_repository']}`
+
+rescue Exception => e
+	Log.error "Unhandled exception: #{e.message}"
+	Log.error "Unhandled exception: #{e.backtrace}"
+end
+
+
