@@ -5,21 +5,34 @@
 
 Gem::Specification.new do |s|
   s.name = %q{abiquo-etk}
-  s.version = "0.3.7"
+  s.version = "0.3.8"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sergio Rubio"]
-  s.date = %q{2010-09-21}
+  s.date = %q{2010-09-22}
   s.description = %q{Tools to troubleshoot your Abiquo installation}
   s.email = %q{sergio@rubio.name}
-  s.executables = ["aetk", "abiquo-check-16-install", "aetk-setup-rs", "aetk-setup-v2v", "aetk-setup-server"]
+  s.executables = ["abiquo-check-16-install", "aetk-setup-rs", "aetk-setup-v2v", "abicli", "aetk-setup-server"]
   s.extra_rdoc_files = [
     "LICENSE",
      "README.rdoc",
      "TODO"
   ]
   s.files = [
-    "VERSION",
+    ".document",
+     ".gitignore",
+     "LICENSE",
+     "README.rdoc",
+     "Rakefile",
+     "TODO",
+     "VERSION",
+     "abiquo-etk.gemspec",
+     "abiquo-etk.spec",
+     "bin/abicli",
+     "bin/abiquo-check-16-install",
+     "bin/aetk-setup-rs",
+     "bin/aetk-setup-server",
+     "bin/aetk-setup-v2v",
      "lib/abiquo-etk.rb",
      "lib/checks/01detect_abiquo.rb",
      "lib/checks/abiquo_service.rb",
@@ -33,6 +46,12 @@ Gem::Specification.new do |s|
      "lib/checks/nfs.rb",
      "lib/checks/os_version.rb",
      "lib/checks/virtualbox.rb",
+     "packages/ruby-1.8.7-1frameos.x86_64.rpm",
+     "packages/rubygem-abiquo-etk-0.3.2-1.fc13.noarch.rpm",
+     "packages/rubygem-nokogiri-1.0.7-1.el5.x86_64.rpm",
+     "packages/rubygem-rpm-utils-0.1-1.fc13.noarch.rpm",
+     "packages/rubygem-term-ansicolor-1.0.4-1.el5.noarch.rpm",
+     "packages/rubygems-1.3.6-1.noarch.rpm",
      "scripts/setup_rs",
      "scripts/setup_v2v"
   ]
