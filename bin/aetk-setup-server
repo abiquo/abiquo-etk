@@ -70,24 +70,24 @@ begin
 		Log.error "Config file #{CONFIG_FILE} does not exist. Exit."
 		exit
 	end
-	`aetk set server eventSinkAddress http://#{@settings['abiquo_server_ip']}:8080/server/EventSink`
+	`abicli set server eventSinkAddress http://#{@settings['abiquo_server_ip']}:8080/server/EventSink`
 	if File.exist? tomcat_server_config
 	  Log.info "Setting db user/password in localhost server context.xml"
-	  `aetk setattr #{tomcat_server_config} 'Resource[@name="jdbc/abiquoDB"]' url 'jdbc:mysql://#{@settings['abiquo_db_host']}:3306/kinton?autoReconnect=true'`
-		`aetk setattr #{tomcat_server_config} 'Resource[@name="jdbc/abiquoDB"]' password #{@settings['abiquo_db_password']}`
-		`aetk setattr #{tomcat_server_config} 'Resource[@name="jdbc/abiquoDB"]' username root`
-		`aetk setattr #{tomcat_server_config} 'Resource[@name="jdbc/heartbeatDB"]' url 'jdbc:mysql://#{@settings['abiquo_db_host']}:3306/kinton?autoReconnect=true'`
-		`aetk setattr #{tomcat_server_config} 'Resource[@name="jdbc/heartbeatDB"]' password #{@settings['abiquo_db_password']}`
-		`aetk setattr #{tomcat_server_config} 'Resource[@name="jdbc/heartbeatDB"]' username root`
+	  `abicli setattr #{tomcat_server_config} 'Resource[@name="jdbc/abiquoDB"]' url 'jdbc:mysql://#{@settings['abiquo_db_host']}:3306/kinton?autoReconnect=true'`
+		`abicli setattr #{tomcat_server_config} 'Resource[@name="jdbc/abiquoDB"]' password #{@settings['abiquo_db_password']}`
+		`abicli setattr #{tomcat_server_config} 'Resource[@name="jdbc/abiquoDB"]' username root`
+		`abicli setattr #{tomcat_server_config} 'Resource[@name="jdbc/heartbeatDB"]' url 'jdbc:mysql://#{@settings['abiquo_db_host']}:3306/kinton?autoReconnect=true'`
+		`abicli setattr #{tomcat_server_config} 'Resource[@name="jdbc/heartbeatDB"]' password #{@settings['abiquo_db_password']}`
+		`abicli setattr #{tomcat_server_config} 'Resource[@name="jdbc/heartbeatDB"]' username root`
   else
     Log.error 'Server context config not found.'
 	end
 	
 	if File.exist? tomcat_api_config
 		Log.info "Setting db user/password in localhost api context.xml"
-		`aetk setattr #{tomcat_api_config} 'Resource[@name="jdbc/abiquoDB"]' url 'jdbc:mysql://#{@settings['abiquo_db_host']}:3306/kinton?autoReconnect=true'`
-		`aetk setattr #{tomcat_api_config} 'Resource[@name="jdbc/abiquoDB"]' password #{@settings['abiquo_db_password']}`
-		`aetk setattr #{tomcat_api_config} 'Resource[@name="jdbc/abiquoDB"]' username root`
+		`abicli setattr #{tomcat_api_config} 'Resource[@name="jdbc/abiquoDB"]' url 'jdbc:mysql://#{@settings['abiquo_db_host']}:3306/kinton?autoReconnect=true'`
+		`abicli setattr #{tomcat_api_config} 'Resource[@name="jdbc/abiquoDB"]' password #{@settings['abiquo_db_password']}`
+		`abicli setattr #{tomcat_api_config} 'Resource[@name="jdbc/abiquoDB"]' username root`
 	else
     Log.error 'API context config not found.'
 	end
