@@ -70,7 +70,6 @@ if ARGV[0] == 'smoketest'
     puts "Creating Datacenter #{cli.config[:dc_name]} remote services..."
     rs =  dc.remoteServices
     rs.create :type => 'VIRTUAL_FACTORY', :uri => 'http://localhost:8080/virtualfactory'
-    rs.create :type => 'VIRTUAL_FACTORY', :uri => 'http://localhost:8080/virtualfactory'
     rs.create :type => 'STORAGE_SYSTEM_MONITOR', :uri => 'http://localhost:8080/ssm'
     rs.create :type => 'VIRTUAL_SYSTEM_MONITOR', :uri => 'http://localhost:8080/vsm'
     rs.create :type => 'NODE_COLLECTOR', :uri => 'http://localhost:8080/nodecollector'
