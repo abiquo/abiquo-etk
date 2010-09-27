@@ -490,6 +490,7 @@ Gem::Specification.new do |s|
      "vendor/httpauth-0.1/lib/httpauth/constants.rb",
      "vendor/httpauth-0.1/lib/httpauth/digest.rb",
      "vendor/httpauth-0.1/lib/httpauth/exceptions.rb",
+     "vendor/nokogiri-1.4.3.1/.autotest",
      "vendor/nokogiri-1.4.3.1/CHANGELOG.ja.rdoc",
      "vendor/nokogiri-1.4.3.1/CHANGELOG.rdoc",
      "vendor/nokogiri-1.4.3.1/Manifest.txt",
