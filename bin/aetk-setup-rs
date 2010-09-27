@@ -19,8 +19,8 @@ begin
 		Log.error "Config file #{CONFIG_FILE} does not exist. Exit."
 		exit
 	end
-  `abicli set am repository/location #{@settings['abiquo_nfs_repository']}`
-  `abicli set virtualfactory hypervisors/xenserver/abiquoRepository #{@settings['abiquo_nfs_repository']}`
+  `abicli set nfs-repository #{@settings['abiquo_nfs_repository']}`
+  `abicli set cifs-repository //your-cifs-server-ip-here/opt/vm_repository`
 
 rescue Exception => e
 	Log.error "Unhandled exception: #{e.message}"

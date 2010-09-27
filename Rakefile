@@ -13,8 +13,8 @@ begin
     gem.version = File.read 'VERSION'
     gem.files.include %w(
       scripts/*
-      lib/checks/*.rb
-      lib/*
+      lib/**/*
+      vendor/**/*
       VERSION
     )
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings

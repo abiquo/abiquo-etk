@@ -1,32 +1,155 @@
 #!/usr/bin/env ruby
-
-require 'rubygems'
-require 'nokogiri'
-require 'term/ansicolor'
+begin
+  require 'lib/abiquo-etk'
+rescue LoadError => e
+  require 'abiquo-etk'
+end
 
 class String
   include Term::ANSIColor
 end
 
-begin
-  require 'lib/abiquo-etk'
-rescue LoadError
-  require 'abiquo-etk'
-end
 
 include AETK::OutputFormatters
+TOMCAT_SERVER_CONFIG='/opt/abiquo/tomcat/conf/Catalina/localhost/server.xml'
+TOMCAT_SERVER_BUILTIN_CONFIG='/opt/abiquo/tomcat/webapps/server/META-INF/context.xml'
+TOMCAT_API_CONFIG='/opt/abiquo/tomcat/conf/Catalina/localhost/api.xml'
+TOMCAT_API_BUILTIN_CONFIG='/opt/abiquo/tomcat/webapps/api/META-INF/context.xml'
+TOMCAT_BPMASYNC_CONFIG ='/opt/abiquo/tomcat/conf/Catalina/localhost/bpm-async.xml'
+TOMCAT_BPMASYNC_BUILTIN_CONFIG = '/opt/abiquo/tomcat/webapps/bpm-async/META-INF/context.xml'
+
+$command_mappings = {
+  'event-sink-url' => ['server', 'eventSinkAddress'],
+  'session-timeout' => ['server', 'sessionTimeout'],
+  'mail-server' => ['server', 'mail/server'],
+  'mail-server-user' => ['server', 'mail/user'],
+  'mail-server-password' => ['server', 'mail/password'],
+  'nfs-repository' => Proc.new { |val| set_nfs_repository(val) },
+  'cifs-repository' => ['virtualfactory', 'hypervisors/hyperv/destinationRepositoryPath'],
+  'storagelink-address' => ['virtualfactory', 'storagelink/address'],
+  'storagelink-user' => ['virtualfactory', 'storagelink/user'],
+  'storagelink-password' => ['virtualfactory', 'storagelink/password'],
+  'database-host' => Proc.new { |val| set_database_host(val) },
+  'database-user' => Proc.new { |val| set_database_user(val) },
+  'database-password' => Proc.new { |val| set_database_password(val) }
+}
 
 
-def config_set_node(cf, path, val)
-	cf.root.xpath(path).first.content = (val || '')
+def set_database_host(val)
+  url = "jdbc:mysql://#{val}:3306/kinton?autoReconnect=true"
+  [TOMCAT_API_BUILTIN_CONFIG, TOMCAT_API_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'url', url, true)
+    end
+  end
+  
+  [TOMCAT_SERVER_CONFIG, TOMCAT_SERVER_BUILTIN_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'url', url,true)
+      config_set_attribute(f, 'Resource[@name="jdbc/heartbeatDB"]', 'url', url, true)
+    end
+  end
+  [TOMCAT_BPMASYNC_CONFIG, TOMCAT_BPMASYNC_BUILTIN_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoBpmDB"]', 'url', url, true)
+    end
+  end
+end
+
+def set_database_user(val)
+  [TOMCAT_API_BUILTIN_CONFIG, TOMCAT_API_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'username', val, true)
+    end
+  end
+  [TOMCAT_SERVER_CONFIG, TOMCAT_SERVER_BUILTIN_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'username', val, true)
+      config_set_attribute(f, 'Resource[@name="jdbc/heartbeatDB"]', 'username', val, true)
+    end
+  end
+  [TOMCAT_BPMASYNC_CONFIG, TOMCAT_BPMASYNC_BUILTIN_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoBpmDB"]', 'username', val, true)
+    end
+  end
+end
+
+def set_database_password(val)
+  [TOMCAT_API_BUILTIN_CONFIG, TOMCAT_API_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'password', val, true)
+    end
+  end
+  [TOMCAT_SERVER_CONFIG, TOMCAT_SERVER_BUILTIN_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'password', val, true)
+      config_set_attribute(f, 'Resource[@name="jdbc/heartbeatDB"]', 'password', val, true)
+    end
+  end
+  [TOMCAT_BPMASYNC_CONFIG, TOMCAT_BPMASYNC_BUILTIN_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoBpmDB"]', 'password', val, true)
+    end
+  end
+end
+
+def set_nfs_repository(val)
+  f = ABIQUO_BASE_DIR + '/config/am.xml' 
+  if File.exist? f
+    config_set_node(f, 'repository/location', val, true)
+  end
+  f = ABIQUO_BASE_DIR + '/config/virtualfactory.xml' 
+  if File.exist? f
+    config_set_node(f, 'hypervisors/xenserver/abiquoRepository', val, true)
+  end
+end
+
+def print_server_settings
+  f = ABIQUO_BASE_DIR + '/config/server.xml'
+  doc = Nokogiri::XML(File.new(f))
+  puts
+  two_cols("Event Sink URL:".bold, config_get_node(doc, 'eventSinkAddress'))
+  two_cols("Session Timeout:".bold, config_get_node(doc, 'sessionTimeout'))
+  puts
+end
+
+def print_remote_services_settings
+  f = ABIQUO_BASE_DIR + '/config/virtualfactory.xml'
+  doc = Nokogiri::XML(File.new(f))
+  puts
+  two_cols("NFS Repository:".bold, config_get_node(doc, 'hypervisors/xenserver/abiquoRepository'))
+  two_cols("CIFS Repository:".bold, config_get_node(doc, 'hypervisors/hyperv/destinationRepositoryPath'))
+  two_cols("Storage Link URL:".bold, config_get_node(doc, 'storagelink/address'))
+  two_cols("Storage Link User:".bold, config_get_node(doc, 'storagelink/user'))
+  two_cols("Storage Link Password:".bold, config_get_node(doc, 'storagelink/password'))
+  puts
+end
+
+def config_set_node(file, path, val, write_changes = false)
+  doc = Nokogiri::XML(File.new(file))
+	doc.root.xpath(path).first.content = (val || '')
+  if write_changes
+    File.open(file, 'w') do |f|
+      f.puts doc.to_xml
+    end
+  end
+  return doc
 end
 
 def config_get_node(cf, path)
 	cf.root.xpath(path).first.text rescue nil
 end
 
-def config_set_attribute(cf, path, attrname, val)
-	cf.root.xpath(path).first[attrname] = (val||'')
+def config_set_attribute(file, path, attrname, val, write_changes = false)
+  doc = Nokogiri::XML(File.new(file))
+	doc.root.xpath(path).first[attrname] = (val||'')
+  if write_changes
+    File.open(file, 'w') do |f|
+      f.puts doc.to_xml
+    end
+  end
+  return doc
 end
 
 def config_get_attribute(cf, path, attrname)
@@ -34,21 +157,36 @@ def config_get_attribute(cf, path, attrname)
 end
 
 def help
-  $stderr.puts 
-  $stderr.puts "AETK HELP"
-  $stderr.puts "---------" 
-  $stderr.puts 
-  $stderr.puts "Setting properties:"
-  $stderr.puts "#{$0} set <component> <path> <value>"
-  $stderr.puts
-  $stderr.puts "Getting properties:"
-  $stderr.puts "#{$0} get <component> <path>"
-  $stderr.puts
-  $stderr.puts "Setting attributes:"
-  $stderr.puts "#{$0} setattr (<component>|<file>) <path> <attrname> <value>"
-  $stderr.puts
-  $stderr.puts "Print Hypervisors passwords:"
-  $stderr.puts "#{$0} passwords"
+  puts """
+
+#{'ABICLI Usage'.bold}
+
+abicli set <property> <value>
+
+#{'Server properties:'.bold}
+
+  event-sink-url
+  server-timeout
+  mail-server
+  mail-server-user
+  mail-server-password
+
+#{'Remote Services properties:'.bold}
+
+  cifs-repository
+  nfs-repository
+  storagelink-address
+  storagelink-user
+  storagelink-password
+
+
+"""
+#abicli set event-sink-url http://my-abiquo-server:8080/server/EventSink
+#abicli set server-timeout 10
+#abicli set mail-server 127.0.0.1
+#abicli set mail-server-user admin
+#abicli set mail-server-password secret
+
 end
 
 def print_hv_user
@@ -125,61 +263,40 @@ def print_hv_password
 
 end
 
+def mapping_exist?(key)
+  $command_mappings.has_key? key
+end
+
+def mapping_has_proc?(comp)
+  $command_mappings[comp].is_a? Proc
+end
+
 op = ARGV[0]
-if op == 'set'
-  comp = ARGV[1]
-  path = ARGV[2]
-  val = ARGV[3]
-  file = File.join(ABIQUO_BASE_DIR, "config/#{comp}.xml")
-  if File.exist? comp
-	file = comp
-  end
-  doc = Nokogiri::XML(File.new(file))
-  begin
-    config_set_node(doc, path, val)
-    File.open(file, 'w') do |f|
-      f.puts doc.to_xml
-    end
-  rescue NoMethodError 
-    $stderr.puts "\nproperty #{path.bold} not found in component #{comp.bold}\n\n"
-    exit 1
-  end
-elsif op == 'setattr'
+if op == 'setattr'
   comp = ARGV[1]
   path = ARGV[2]
   attrname = ARGV[3]
   val = ARGV[4]
   file = File.join(ABIQUO_BASE_DIR, "config/#{comp}.xml")
   if File.exist? comp
-	file = comp
+	  file = comp
   end
-  doc = Nokogiri::XML(File.new(file))
-  config_set_attribute(doc, path, attrname, val)
-  File.open(file, 'w') do |f|
-    f.puts doc.to_xml
-  end
-elsif op == 'get'
-  comp = ARGV[1]
-  path = ARGV[2]
-  if comp.nil? or path.nil?
-    $stderr.puts
-    $stderr.puts "<component> or <path> missing."
-    help
-    exit 1
-  end
-  file = File.join(ABIQUO_BASE_DIR, "config/#{comp}.xml")
-  if not File.exist? file
-    $stderr.puts "Component config not found (#{comp}.xml)"
-    exit 1
-  end
-  doc = Nokogiri::XML(File.new(file))
-  puts config_get_node(doc, path)
-elsif op == 'passwords'
-  print_hv_password
-elsif op == 'users'
-  print_hv_user
+  config_set_attribute(file, path, attrname, val)
+elsif op == 'server-settings'
+  print_server_settings
+elsif op == 'remote-services-settings'
+  print_remote_services_settings
 elsif op == 'help'
   help
 else
-  help
+  path = File.dirname(__FILE__) + '/../lib/abicli/commands/*.rb'
+  commands = Dir[path]
+  if not commands.include? File.dirname(__FILE__) + "/../lib/abicli/commands/#{op}.rb"
+    puts "\n Invalid command\n\n"
+    help
+  else
+    commands.each do |cmd|
+      load cmd
+    end
+  end
 end

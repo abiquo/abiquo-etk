@@ -2,34 +2,9 @@
 require 'logger'
 
 CONFIG_FILE='/etc/sysconfig/abiquo-server'
-TOMCAT_SERVER_CONFIG='/opt/abiquo/tomcat/conf/Catalina/localhost/server.xml'
-TOMCAT_SERVER_BUILTIN_CONFIG='/opt/abiquo/tomcat/webapps/server/META-INF/context.xml'
-TOMCAT_API_CONFIG='/opt/abiquo/tomcat/conf/Catalina/localhost/api.xml'
-TOMCAT_API_BUILTIN_CONFIG='/opt/abiquo/tomcat/webapps/api/META-INF/context.xml'
 
 Log = Logger.new('/var/log/abiquo-etk.log')
 Log.level = Logger::INFO
-
-def tomcat_server_config
-  if File.exist? TOMCAT_SERVER_CONFIG
-    return TOMCAT_SERVER_CONFIG
-  elsif File.exist? TOMCAT_SERVER_BUILTIN_CONFIG
-    return TOMCAT_SERVER_BUILTIN_CONFIG
-  else
-    return '' 
-  end
-end
-
-def tomcat_api_config
-  if File.exist? TOMCAT_API_CONFIG
-    return TOMCAT_API_CONFIG
-  elsif File.exist? TOMCAT_API_BUILTIN_CONFIG
-    return TOMCAT_API_BUILTIN_CONFIG
-  else
-    return '' 
-  end
-end
-
 
 def create_schemas(user = 'root', password = '')
   cmd = ''
@@ -65,33 +40,20 @@ begin
 			key,val = l.strip.chomp.split('=')
 			@settings[key.strip.chomp] = val.strip.chomp rescue ''
 		end
-
 	else
 		Log.error "Config file #{CONFIG_FILE} does not exist. Exit."
 		exit
 	end
-	`abicli set server eventSinkAddress http://#{@settings['abiquo_server_ip']}:8080/server/EventSink`
-	if File.exist? tomcat_server_config
-	  Log.info "Setting db user/password in localhost server context.xml"
-	  `abicli setattr #{tomcat_server_config} 'Resource[@name="jdbc/abiquoDB"]' url 'jdbc:mysql://#{@settings['abiquo_db_host']}:3306/kinton?autoReconnect=true'`
-		`abicli setattr #{tomcat_server_config} 'Resource[@name="jdbc/abiquoDB"]' password #{@settings['abiquo_db_password']}`
-		`abicli setattr #{tomcat_server_config} 'Resource[@name="jdbc/abiquoDB"]' username root`
-		`abicli setattr #{tomcat_server_config} 'Resource[@name="jdbc/heartbeatDB"]' url 'jdbc:mysql://#{@settings['abiquo_db_host']}:3306/kinton?autoReconnect=true'`
-		`abicli setattr #{tomcat_server_config} 'Resource[@name="jdbc/heartbeatDB"]' password #{@settings['abiquo_db_password']}`
-		`abicli setattr #{tomcat_server_config} 'Resource[@name="jdbc/heartbeatDB"]' username root`
-  else
-    Log.error 'Server context config not found.'
-	end
-	
-	if File.exist? tomcat_api_config
-		Log.info "Setting db user/password in localhost api context.xml"
-		`abicli setattr #{tomcat_api_config} 'Resource[@name="jdbc/abiquoDB"]' url 'jdbc:mysql://#{@settings['abiquo_db_host']}:3306/kinton?autoReconnect=true'`
-		`abicli setattr #{tomcat_api_config} 'Resource[@name="jdbc/abiquoDB"]' password #{@settings['abiquo_db_password']}`
-		`abicli setattr #{tomcat_api_config} 'Resource[@name="jdbc/abiquoDB"]' username root`
-	else
-    Log.error 'API context config not found.'
-	end
 
+  Log.info "Setting EventSink URL"
+  `abicli set event-sink-url http://#{@settings['abiquo_server_ip']}:8080/server/EventSink`
+  
+  Log.info "Setting DB Properties"
+  `abicli set database-host #{@settings['abiquo_db_host']}`
+  `abicli set database-user root`
+  `abicli set database-password #{@settings['abiquo_db_password']}`
+  `abicli set mail-server 127.0.0.1`
+    
   Log.info "Creating database schemas..."
   create_schemas
 rescue Exception => e

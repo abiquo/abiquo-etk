@@ -1,4 +1,16 @@
+Dir[File.dirname(__FILE__) + '/../vendor/*'].each do |dir|
+  $: << dir + '/lib'
+end
+
 require 'logger'
+require 'rubygems'
+require 'term/ansicolor'
+require 'rpm-utils'
+require 'logger'
+require 'nokogiri'
+require 'mixlib/cli'
+require 'abiquo'
+
 
 #
 # CONFIG CONSTANTS

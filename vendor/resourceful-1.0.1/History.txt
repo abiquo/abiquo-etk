@@ -1,0 +1,39 @@
+Version 1.0.0
+============
+ * Added .request() convenience method to Resourceful module.
+ * Added .get(), .post(), .put(), .delete() and .head() convenience method to Resourceful module
+
+Version 0.7.0
+=============
+ * Multiple values in a single header field are treated the same as repeated header fields. (Peter Williams)
+
+Compatibility issues
+--------------------
+
+ * The semantics of the Resourceful::Header API have changed slightly.
+   Previously multiple values in a single header field 
+   (e.g. `Accept: application/xml, application/json`) where treated 
+   differently from multiple values occurring in multiple fields (e.g 
+   `Accept: application/xml\n\rAccept: application/json`).  This lead 
+   to some unfortunate complexity when interacting with multi-valued 
+   fields.
+
+
+Version 0.6.0
+=============
+
+ * Improved support for multi-valued header fields. (Peter Williams)
+ * Added convenience mechanisms for making URL encoded and multipart form data requests. (Peter Williams)
+ * Ruby 1.9 support (Peter Williams)
+
+Compatibility issues
+--------------------
+
+ * The semantics of the Resourceful::Header API have changed slightly.
+   Previously, any header might return a string or an array.  Now
+   fields are either "single-value" and always return a string, or
+   "multi-value" and always return an array.  See API doc for more
+   details.
+
+
+

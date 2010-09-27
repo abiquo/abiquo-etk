@@ -5,13 +5,6 @@ if `whoami`.strip.chomp != 'root'
   exit
 end
 
-require 'rubygems'
-require 'term/ansicolor'
-require 'rpm-utils'
-require 'logger'
-require 'nokogiri'
-require 'mixlib/cli'
-
 begin
   require 'lib/abiquo-etk'
 rescue LoadError
