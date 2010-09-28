@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{abiquo-etk}
-  s.version = "0.4.3"
+  s.version = "0.4.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sergio Rubio"]
@@ -35,6 +35,7 @@ Gem::Specification.new do |s|
      "bin/aetk-setup-v2v",
      "lib/abicli/commands/set.rb",
      "lib/abicli/commands/smoketest.rb",
+     "lib/abicli/commands/version.rb",
      "lib/abiquo-etk.rb",
      "lib/checks/01detect_abiquo.rb",
      "lib/checks/abiquo_service.rb",
