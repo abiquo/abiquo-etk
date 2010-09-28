@@ -1,5 +1,10 @@
 if ARGV[0] == 'set'
 
+  if not File.directory? ABIQUO_BASE_DIR
+    $stderr.puts 'Abiquo config directory not found. Aborting.'
+    exit 1
+  end
+
   comp = ARGV[1]
   path = ARGV[2]
   val = ARGV[3]

@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{abiquo-etk}
-  s.version = "0.4.2"
+  s.version = "0.4.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sergio Rubio"]
-  s.date = %q{2010-09-27}
+  s.date = %q{2010-09-28}
   s.description = %q{Tools to troubleshoot your Abiquo installation}
   s.email = %q{sergio@rubio.name}
   s.executables = ["abiquo-check-16-install", "aetk-setup-rs", "aetk-setup-v2v", "abicli", "aetk-setup-server"]
