@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 require 'logger'
+require 'abiquo-etk'
 
 CONFIG_FILE='/etc/sysconfig/abiquo-server'
 
@@ -33,13 +34,8 @@ def create_schemas(user = 'root', password = '')
 end
 
 begin
-	@settings = {}
 	if File.exist? CONFIG_FILE
-		File.read(CONFIG_FILE).each_line do |l|
-			next if l.strip.chomp.empty?
-			key,val = l.strip.chomp.split('=')
-			@settings[key.strip.chomp] = val.strip.chomp rescue ''
-		end
+    @settings = abiquo_server_settings
 	else
 		Log.error "Config file #{CONFIG_FILE} does not exist. Exit."
 		exit

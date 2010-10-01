@@ -38,6 +38,26 @@ Log.level = Logger::INFO
 def abiquo_edition
 end
 
+def abiquo_server_settings(file = '/etc/sysconfig/abiquo-server')
+	settings = {}
+  File.read(file).each_line do |l|
+    next if l.strip.chomp.empty?
+    key,val = l.strip.chomp.split('=')
+    settings[key.strip.chomp] = val.strip.chomp rescue ''
+  end
+  settings
+end
+
+def abiquo_rs_settings(file = '/etc/sysconfig/abiquo-rs')
+	settings = {}
+  File.read(file).each_line do |l|
+    next if l.strip.chomp.empty?
+    key,val = l.strip.chomp.split('=')
+    settings[key.strip.chomp] = val.strip.chomp rescue ''
+  end
+  settings
+end
+
 def abiquo_base_dir
   return ABIQUO_BASE_DIR
 end

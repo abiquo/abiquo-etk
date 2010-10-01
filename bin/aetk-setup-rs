@@ -1,25 +1,31 @@
 #!/usr/bin/env ruby
 require 'logger'
+require 'abiquo-etk'
 
 CONFIG_FILE='/etc/sysconfig/abiquo-rs'
 
-Log = Logger.new('/var/log/abiquo-etk.log')
+Log = Logger.new "/var/log/abiquo-etk.log"
 Log.level = Logger::INFO
 
 begin
 	@settings = {}
 	if File.exist? CONFIG_FILE
-		File.read(CONFIG_FILE).each_line do |l|
-			next if l.strip.chomp.empty?
-			key,val = l.strip.chomp.split('=')
-			@settings[key.strip.chomp] = val.strip.chomp rescue ''
-		end
-
+    @settings = abiquo_rs_settings
 	else
 		Log.error "Config file #{CONFIG_FILE} does not exist. Exit."
 		exit
 	end
-  `abicli set nfs-repository #{@settings['abiquo_nfs_repository']}`
+  repo = @settings['abiquo_nfs_repository']
+  if repo =~ /localhost|127.0.0.1/
+    if File.exist? '/etc/sysconfig/abiquo-server'
+      Log.info "NFS Repository points to localhost, fixing..."
+      s = abiquo_server_settings
+      repo = s['abiquo_server_ip'] + ':/opt/vm_repository'
+    end
+  end
+  Log.info "Setting nfs-repository to #{repo}"
+  `abicli set nfs-repository #{repo}`
+  Log.info "Setting cifs-repository to #{repo}"
   `abicli set cifs-repository //your-cifs-server-ip-here/opt/vm_repository`
 
 rescue Exception => e
