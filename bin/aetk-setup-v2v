@@ -21,7 +21,8 @@ begin
 	end
 
 	Log.info "Setting db user/password in localhost bpm-async context.xml"
-  `abicli set database-host #{@settings['abiquo_db_host']}`
+  `sed -i 's/localhost/0\.0\.0\.0/' /opt/abiquo/tomcat/webapps/bpm-async/WEB-INF/classes/activemq.xml`
+  `abicli set database-host #{@settings['abiquo_server_ip']}`
   `abicli set database-user root`
   `abicli set database-password #{@settings['abiquo_db_password']}`
 rescue Exception => e
