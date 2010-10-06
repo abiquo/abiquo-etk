@@ -5,7 +5,7 @@
 
 Summary: Abiquo Elite Toolkit
 Name: rubygem-%{gemname}
-Version: 0.4.6
+Version: 0.4.7
 Release: 1%{?dist}
 Group: Development/Languages
 License: GPLv2+ or Ruby
@@ -55,6 +55,9 @@ rm -rf %{buildroot}
 
 
 %changelog
+* Fri Oct 01 2010 : Sergio Rubio <srubio@abiquo.com> - 0.4.7-1
+- Updated to upstream 0.4.7
+
 * Fri Oct 01 2010 : Sergio Rubio <srubio@abiquo.com> - 0.4.6-1
 - Updated to upstream 0.4.6
 
