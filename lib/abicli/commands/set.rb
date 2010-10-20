@@ -1,9 +1,109 @@
 if ARGV[0] == 'set'
-
+  
   if not File.directory? ABIQUO_BASE_DIR
-    $stderr.puts 'Abiquo Platform not found. Is this an Abiquo installation?'
+    $stderr.puts "\n'abicli set' command is used to configure the Abiquo Platform.\nUnfortunately, I can't find the Abiquo Platform installed in this server.\n\nTry other commands.\n\n"
+    help
     exit 1
   end
+
+  def set_database_host(val)
+    url = "jdbc:mysql://#{val}:3306/kinton?autoReconnect=true"
+    [TOMCAT_API_BUILTIN_CONFIG, TOMCAT_API_CONFIG].each do |f|
+      if File.exist?(f)
+        config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'url', url, true)
+      end
+    end
+    
+    [TOMCAT_SERVER_CONFIG, TOMCAT_SERVER_BUILTIN_CONFIG].each do |f|
+      if File.exist?(f)
+        config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'url', url,true)
+        config_set_attribute(f, 'Resource[@name="jdbc/heartbeatDB"]', 'url', url, true)
+      end
+    end
+    [TOMCAT_BPMASYNC_CONFIG, TOMCAT_BPMASYNC_BUILTIN_CONFIG].each do |f|
+      if File.exist?(f)
+        config_set_attribute(f, 'Resource[@name="jdbc/abiquoBpmDB"]', 'url', url, true)
+      end
+    end
+  end
+
+  def set_database_user(val)
+    [TOMCAT_API_BUILTIN_CONFIG, TOMCAT_API_CONFIG].each do |f|
+      if File.exist?(f)
+        config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'username', val, true)
+      end
+    end
+    [TOMCAT_SERVER_CONFIG, TOMCAT_SERVER_BUILTIN_CONFIG].each do |f|
+      if File.exist?(f)
+        config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'username', val, true)
+        config_set_attribute(f, 'Resource[@name="jdbc/heartbeatDB"]', 'username', val, true)
+      end
+    end
+    [TOMCAT_BPMASYNC_CONFIG, TOMCAT_BPMASYNC_BUILTIN_CONFIG].each do |f|
+      if File.exist?(f)
+        config_set_attribute(f, 'Resource[@name="jdbc/abiquoBpmDB"]', 'username', val, true)
+      end
+    end
+  end
+
+  def set_database_password(val)
+    [TOMCAT_API_BUILTIN_CONFIG, TOMCAT_API_CONFIG].each do |f|
+      if File.exist?(f)
+        config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'password', val, true)
+      end
+    end
+    [TOMCAT_SERVER_CONFIG, TOMCAT_SERVER_BUILTIN_CONFIG].each do |f|
+      if File.exist?(f)
+        config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'password', val, true)
+        config_set_attribute(f, 'Resource[@name="jdbc/heartbeatDB"]', 'password', val, true)
+      end
+    end
+    [TOMCAT_BPMASYNC_CONFIG, TOMCAT_BPMASYNC_BUILTIN_CONFIG].each do |f|
+      if File.exist?(f)
+        config_set_attribute(f, 'Resource[@name="jdbc/abiquoBpmDB"]', 'password', val, true)
+      end
+    end
+  end
+
+  def set_nfs_repository(val)
+    f = ABIQUO_BASE_DIR + '/config/am.xml' 
+    if File.exist? f
+      config_set_node(f, 'repository/location', val, true)
+    end
+    f = ABIQUO_BASE_DIR + '/config/virtualfactory.xml' 
+    if File.exist? f
+      config_set_node(f, 'hypervisors/xenserver/abiquoRepository', val, true)
+    end
+  end
+
+  $command_mappings = {
+    'event-sink-url' => ['server', 'eventSinkAddress'],
+    'session-timeout' => ['server', 'sessionTimeout'],
+    'mail-server' => ['server', 'mail/server'],
+    'mail-server-user' => ['server', 'mail/user'],
+    'mail-server-password' => ['server', 'mail/password'],
+    'nfs-repository' => Proc.new { |val| set_nfs_repository(val) },
+    'cifs-repository' => ['virtualfactory', 'hypervisors/hyperv/destinationRepositoryPath'],
+    'storagelink-address' => ['virtualfactory', 'storagelink/address'],
+    'storagelink-user' => ['virtualfactory', 'storagelink/user'],
+    'storagelink-password' => ['virtualfactory', 'storagelink/password'],
+    'database-host' => Proc.new { |val| set_database_host(val) },
+    'database-user' => Proc.new { |val| set_database_user(val) },
+    'database-password' => Proc.new { |val| set_database_password(val) }
+  }
+
+  def mapping_exist?(key)
+    $command_mappings.has_key? key
+  end
+
+  def mapping_has_proc?(comp)
+    $command_mappings[comp].is_a? Proc
+  end
+  
+  def help
+    puts "Available subcommands:"
+  end
+
 
   comp = ARGV[1]
   path = ARGV[2]

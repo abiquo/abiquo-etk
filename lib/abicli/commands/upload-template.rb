@@ -1,4 +1,5 @@
 if ARGV[0] == 'upload-template'
+
   ARGV.shift
 
   # StreamingUploader Adapted by Sergio Rubio <srubio@abiquo.com> for Abiquo
@@ -204,7 +205,7 @@ if ARGV[0] == 'upload-template'
     option :help,
       :short => "-h",
       :long => "--help",
-      :description => "Show this message",
+      :description => "Upload a Virtual Machine template to Abiquo local repository.\n\n",
       :on => :tail,
       :boolean => true,
       :show_options => true,
@@ -218,7 +219,9 @@ if ARGV[0] == 'upload-template'
   # We need this to show the progress percentage 
   file = cli.config[:disk_file]
   if file.nil? or not File.exist?(file)
-    $stderr.puts "\n --disk-file is required. Make sure the specified file exists.\n\n"
+    $stderr.puts "\nArgument '--disk-file' is mandatory. Make sure the specified file exists.\n\n"
+    cli.opt_parser.banner = 'Usage: abicli upload-template [options]'
+    puts cli.opt_parser.help
     exit 1
   end
   rs_url = cli.config[:rs_url]

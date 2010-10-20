@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{abiquo-etk}
-  s.version = "0.4.12"
+  s.version = "0.4.14"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sergio Rubio"]
@@ -33,6 +33,8 @@ Gem::Specification.new do |s|
      "bin/aetk-setup-rs",
      "bin/aetk-setup-server",
      "bin/aetk-setup-v2v",
+     "lib/abicli/commands/remote-services-settings.rb",
+     "lib/abicli/commands/server-settings.rb",
      "lib/abicli/commands/set.rb",
      "lib/abicli/commands/smoketest.rb",
      "lib/abicli/commands/upload-template.rb",
@@ -558,16 +560,16 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<nokogiri>, [">= 1.4"])
+      s.add_runtime_dependency(%q<nokogiri>, [">= 1.3"])
       s.add_runtime_dependency(%q<term-ansicolor>, [">= 1.0"])
       s.add_runtime_dependency(%q<mixlib-cli>, [">= 1.2"])
     else
-      s.add_dependency(%q<nokogiri>, [">= 1.4"])
+      s.add_dependency(%q<nokogiri>, [">= 1.3"])
       s.add_dependency(%q<term-ansicolor>, [">= 1.0"])
       s.add_dependency(%q<mixlib-cli>, [">= 1.2"])
     end
   else
-    s.add_dependency(%q<nokogiri>, [">= 1.4"])
+    s.add_dependency(%q<nokogiri>, [">= 1.3"])
     s.add_dependency(%q<term-ansicolor>, [">= 1.0"])
     s.add_dependency(%q<mixlib-cli>, [">= 1.2"])
   end
