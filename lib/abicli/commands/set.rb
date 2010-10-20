@@ -1,7 +1,7 @@
 if ARGV[0] == 'set'
 
   if not File.directory? ABIQUO_BASE_DIR
-    $stderr.puts 'Abiquo config directory not found. Aborting.'
+    $stderr.puts 'Abiquo Platform not found. Is this an Abiquo installation?'
     exit 1
   end
 

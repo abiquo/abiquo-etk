@@ -11,6 +11,9 @@ begin
     gem.homepage = "http://github.com/rubiojr/abiquo-etk"
     gem.authors = ["Sergio Rubio"]
     gem.version = File.read 'VERSION'
+    gem.add_dependency(%q<nokogiri>, [">= 1.4"])
+    gem.add_dependency(%q<term-ansicolor>, [">= 1.0"])
+    gem.add_dependency(%q<mixlib-cli>, [">= 1.2"])
     gem.files.include %w(
       scripts/*
       lib/**/*

@@ -5,7 +5,7 @@
 
 Summary: Abiquo Elite Toolkit
 Name: rubygem-%{gemname}
-Version: 0.4.9
+Version: 0.4.12
 Release: 1%{?dist}
 Group: Development/Languages
 License: GPLv2+ or Ruby
@@ -13,6 +13,8 @@ URL: http://github.com/rubiojr/abiquo-etk
 Source0: %{gemname}-%{version}.gem
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: rubygems
+Requires: rubygem(nokogiri) >= 1.4
+Requires: rubygem(term-ansicolor) >= 1.0
 BuildRequires: rubygems
 BuildArch: noarch
 Provides: rubygem(%{gemname}) = %{version}
@@ -55,6 +57,9 @@ rm -rf %{buildroot}
 
 
 %changelog
+* Wed Oct 20 2010 : Sergio Rubio <srubio@abiquo.com> - 0.4.12-1
+- Updated to upstream 0.4.12
+
 * Thu Oct 07 2010 : Sergio Rubio <srubio@abiquo.com> - 0.4.9-1
 - Updated to upstream 0.4.9
 
