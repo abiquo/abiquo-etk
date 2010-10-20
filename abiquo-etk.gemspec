@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{abiquo-etk}
-  s.version = "0.4.7"
+  s.version = "0.4.10"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sergio Rubio"]
-  s.date = %q{2010-10-06}
+  s.date = %q{2010-10-20}
   s.description = %q{Tools to troubleshoot your Abiquo installation}
   s.email = %q{sergio@rubio.name}
   s.executables = ["abiquo-check-16-install", "aetk-setup-rs", "aetk-setup-v2v", "abicli", "aetk-setup-server"]
@@ -35,6 +35,7 @@ Gem::Specification.new do |s|
      "bin/aetk-setup-v2v",
      "lib/abicli/commands/set.rb",
      "lib/abicli/commands/smoketest.rb",
+     "lib/abicli/commands/upload-template.rb",
      "lib/abicli/commands/version.rb",
      "lib/abiquo-etk.rb",
      "lib/checks/01detect_abiquo.rb",
