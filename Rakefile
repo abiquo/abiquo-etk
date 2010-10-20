@@ -7,8 +7,8 @@ begin
     gem.name = "abiquo-etk"
     gem.summary = %Q{Abiquo Elite Toolkit}
     gem.description = %Q{Tools to troubleshoot your Abiquo installation}
-    gem.email = "sergio@rubio.name"
-    gem.homepage = "http://github.com/rubiojr/abiquo-etk"
+    gem.email = "srubio@abiquo.com"
+    gem.homepage = "http://github.com/abiquo/abiquo-etk"
     gem.authors = ["Sergio Rubio"]
     gem.version = File.read 'VERSION'
     gem.add_dependency(%q<nokogiri>, [">= 1.3"])
