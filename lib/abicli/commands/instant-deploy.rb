@@ -148,9 +148,9 @@ if ARGV[0] == 'instant-deploy'
       exit
     end
 
-    puts "Booting the Installer..."
+    puts "\nBooting the Installer..."
     # Boot
-    `kvm -m 1024 -drive file=#{disk_file},if=scsi,boot=on -net user -net nic -cdrom #{target_dir}/instant-deploy.iso -boot once=d`
+    `kvm -m 1024 -drive file=#{disk_file},if=scsi,boot=on -net user -net nic -cdrom #{target_dir}/instant-deploy.iso -boot once=d > /dev/null 2>&1 `
   end
 
   target_dir = "abiquo-instant-deploy-#{Time.now.strftime "%s"}"
