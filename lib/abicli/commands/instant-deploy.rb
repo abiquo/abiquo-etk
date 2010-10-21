@@ -138,22 +138,37 @@ if ARGV[0] == 'instant-deploy'
     end
     `/usr/bin/qemu-img create -f qcow2 #{disk_file} 20GB`
   
-    # Download the iso
-    downloader = HTTPDownloader.new
-    puts "Downloading Abiquo ISO..."
-    begin
-      downloader.download! iso_url, File.new(target_dir + '/instant-deploy.iso', 'w')
-    rescue Exception
-      $stderr.puts "Error downloading Abiquo ISO. Aborting."
-      exit
+
+    if iso_url =~ /http:\/\//
+      # Download the iso
+      downloader = HTTPDownloader.new
+      puts "Downloading Abiquo ISO..."
+      cdrom = ""
+      begin
+        downloader.download! iso_url, File.new(target_dir + '/instant-deploy.iso', 'w')
+        cdrom = target_dir + '/instant-deploy.iso'
+      rescue Exception
+        $stderr.puts "Error downloading Abiquo ISO. Aborting."
+        exit
+      end
+    else
+      if iso_url =~ /file:/
+        iso_url.gsub!('file://','')
+      end
+      if not File.exist? iso_url
+        $stderr.puts "The ISO file specified does not exist."
+        exit 1
+      else
+        cdrom = iso_url
+      end
     end
 
-    puts "\nBooting the Installer...\n\n"
     # Boot
     puts "\nAfter the install process, open the browser and type:\n"
     puts "\nhttp://127.0.0.1:8980/client-premium\n\n"
     puts "To open the Abiquo Web Console."
-    `kvm -m 1024 -drive file=#{disk_file},if=scsi,boot=on -net user,hostfwd=tcp:127.0.0.1:8980-:8080,hostfwd=tcp:127.0.0.1:2300-:22 -net nic -cdrom #{target_dir}/instant-deploy.iso -boot once=d > /dev/null 2>&1 `
+    puts "\nBooting the Installer...\n\n"
+    `kvm -m 1024 -drive file=#{disk_file},if=scsi,boot=on -net user,hostfwd=tcp:127.0.0.1:8980-:8080,hostfwd=tcp:127.0.0.1:2300-:22 -net nic -cdrom #{cdrom} -boot once=d > /dev/null 2>&1 `
   end
 
   target_dir = "abiquo-instant-deploy-#{Time.now.strftime "%s"}"
