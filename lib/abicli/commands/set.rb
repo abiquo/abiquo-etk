@@ -75,6 +75,33 @@ if ARGV[0] == 'set'
       config_set_node(f, 'hypervisors/xenserver/abiquoRepository', val, true)
     end
   end
+  
+  def set_ontap_server_ip(val)
+    f = ABIQUO_BASE_DIR + '/ontap/tomcat/webapps/ROOT/WEB-INF/classes/config.xml'
+    if File.exist? f
+      config_set_node(f, 'filer/host', val, true)
+    else
+      $stderr.puts "NetApp Ontap Connector not installed. Ignoring the order."
+    end
+  end
+  
+  def set_ontap_user(val)
+    f = ABIQUO_BASE_DIR + '/ontap/tomcat/webapps/ROOT/WEB-INF/classes/config.xml'
+    if File.exist? f
+      config_set_node(f, 'filer/user', val, true)
+    else
+      $stderr.puts "NetApp Ontap Connector not installed. Ignoring the order."
+    end
+  end
+
+  def set_ontap_password(val)
+    f = ABIQUO_BASE_DIR + '/ontap/tomcat/webapps/ROOT/WEB-INF/classes/config.xml'
+    if File.exist? f
+      config_set_node(f, 'filer/password', val, true)
+    else
+      $stderr.puts "NetApp Ontap Connector not installed. Ignoring the order."
+    end
+  end
 
   $command_mappings = {
     'event-sink-url' => ['server', 'eventSinkAddress'],
@@ -89,7 +116,10 @@ if ARGV[0] == 'set'
     'storagelink-password' => ['virtualfactory', 'storagelink/password'],
     'database-host' => Proc.new { |val| set_database_host(val) },
     'database-user' => Proc.new { |val| set_database_user(val) },
-    'database-password' => Proc.new { |val| set_database_password(val) }
+    'database-password' => Proc.new { |val| set_database_password(val) },
+    'ontap-user' => Proc.new { |val| set_ontap_user(val) },
+    'ontap-password' => Proc.new { |val| set_ontap_password(val) },
+    'ontap-server-ip' => Proc.new { |val| set_ontap_server_ip(val) }
   }
 
   def mapping_exist?(key)
@@ -101,7 +131,11 @@ if ARGV[0] == 'set'
   end
   
   def help
+    puts "\nSet Abiquo Platform properties\n\n"
     puts "Available subcommands:"
+    $command_mappings.keys.sort.each do |cmd,proc|
+      puts "  #{cmd}"
+    end
   end
 
 
