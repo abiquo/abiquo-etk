@@ -12,6 +12,7 @@ begin
     gem.authors = ["Sergio Rubio"]
     gem.version = File.read 'VERSION'
     gem.add_dependency(%q<nokogiri>, [">= 1.3"])
+    gem.add_dependency(%q<rpm-utils>, [">= 0.1"])
     gem.add_dependency(%q<term-ansicolor>, [">= 1.0"])
     gem.add_dependency(%q<mixlib-cli>, [">= 1.2"])
     gem.files.include %w(
