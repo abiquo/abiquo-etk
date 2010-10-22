@@ -77,6 +77,11 @@ if ARGV[0] == 'instant-deploy'
     option :iso_url,
       :long => '--iso-url URL',
       :description => 'Abiquo ISO URL'
+
+    option :mem,
+      :long => '--mem MEM',
+      :description => 'Virtual Machine memory (in bytes)',
+      :default => '512'
     
     option :help,
       :short => "-h",
@@ -124,6 +129,7 @@ if ARGV[0] == 'instant-deploy'
     target_dir = params[:target_dir] || "abiquo-instant-deploy-#{Time.now.strftime "%s"}"
     disk_file = params[:disk_file] || "#{target_dir}/abiquo.qcow2"
     iso_url = params[:iso_url]
+    mem = params[:mem]
     # Create target directory
     begin
       FileUtils.mkdir(target_dir)
@@ -168,7 +174,12 @@ if ARGV[0] == 'instant-deploy'
     puts "\nhttp://127.0.0.1:8980/client-premium\n\n"
     puts "To open the Abiquo Web Console."
     puts "\nBooting the Installer...\n\n"
-    boot_vm :disk_file => disk_file, :cdrom => cdrom
+    File.open(target_dir + '/run.sh', 'w') do |f|
+      f.puts "#!/bin/sh"
+      f.puts "MEM=#{mem}"
+      f.puts "kvm -m #{mem} -drive file=#{File.basename(disk_file)} -net user,hostfwd=tcp:127.0.0.1:8980-:8080,hostfwd=tcp:127.0.0.1:2300-:22 -net nic -boot order=c > /dev/null 2>&1"
+    end
+    boot_vm :disk_file => disk_file, :cdrom => cdrom, :mem => mem
   end
 
   def distribution_version
@@ -180,8 +191,8 @@ if ARGV[0] == 'instant-deploy'
   def boot_vm(params = {})
     disk_file = params[:disk_file]
     cdrom = params[:cdrom]
-    `kvm -m 1024 -drive file=#{disk_file},if=scsi -net user,hostfwd=tcp:127.0.0.1:8980-:8080,hostfwd=tcp:127.0.0.1:2300-:22 -net nic -cdrom #{cdrom} -boot once=d > /dev/null 2>&1 `
-
+    mem = params[:mem]
+    `kvm -m 1024 -drive file=#{disk_file} -net user,hostfwd=tcp:127.0.0.1:8980-:8080,hostfwd=tcp:127.0.0.1:2300-:22 -net nic -drive file=#{cdrom},media=cdrom -boot order=cd -boot once=d > /dev/null 2>&1 `
   end
 
   target_dir = "abiquo-instant-deploy-#{Time.now.strftime "%s"}"
@@ -202,6 +213,6 @@ if ARGV[0] == 'instant-deploy'
   print "Abiquo Instant Deploy: ".bold
   puts "One Command Cloud Builder\n\n"
   puts "Building the cloud into #{target_dir.bold} directory..."
-  install_iso(:target_dir => target_dir, :iso_url => url)
+  install_iso(:target_dir => target_dir, :iso_url => url, :mem => cli.config[:mem])
 
 end
