@@ -177,7 +177,16 @@ if ARGV[0] == 'instant-deploy'
     File.open(target_dir + '/run.sh', 'w') do |f|
       f.puts "#!/bin/sh"
       f.puts "MEM=#{mem}"
+      f.puts "TAP=vtap0"
+      f.puts ""
       f.puts "kvm -m #{mem} -drive file=#{File.basename(disk_file)} -net user,hostfwd=tcp:127.0.0.1:8980-:8080,hostfwd=tcp:127.0.0.1:2300-:22 -net nic -boot order=c > /dev/null 2>&1"
+      f.puts ""
+      f.puts "#"
+      f.puts "# Comment the above line and uncomment this to use bridged networking."
+      f.puts "# You will need to have a working bridge setup in order to use this."
+      f.puts "# Update TAP variable above to fill your needs."
+      f.puts "#"
+      f.puts "#kvm -m #{mem} -drive file=#{File.basename(disk_file)} -net tap,ifname=$TAP -net nic -boot order=c > /dev/null 2>&1"
     end
     boot_vm :disk_file => disk_file, :cdrom => cdrom, :mem => mem
   end
