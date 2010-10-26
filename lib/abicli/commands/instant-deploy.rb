@@ -82,6 +82,16 @@ if ARGV[0] == 'instant-deploy'
       :long => '--mem MEM',
       :description => 'Virtual Machine memory (in bytes)',
       :default => '512'
+
+    option :ssh_port,
+      :long => '--ssh-port PORT',
+      :description => 'Forwarded SSH port (Default 2300)',
+      :default => '2300'
+
+    option :tomcat_port,
+      :long => '--tomcat-port PORT',
+      :description => 'Forwarded Tomcat port (Default 8980',
+      :default => '8980'
     
     option :help,
       :short => "-h",
@@ -130,6 +140,8 @@ if ARGV[0] == 'instant-deploy'
     disk_file = params[:disk_file] || "#{target_dir}/abiquo.qcow2"
     iso_url = params[:iso_url]
     mem = params[:mem]
+    tomcat_port = params[:tomcat_port]
+    ssh_port = params[:ssh_port]
     # Create target directory
     begin
       FileUtils.mkdir(target_dir)
@@ -171,15 +183,17 @@ if ARGV[0] == 'instant-deploy'
 
     # Boot
     puts "\nAfter the install process, open the browser and type:\n"
-    puts "\nhttp://127.0.0.1:8980/client-premium\n\n"
+    puts "\nhttp://127.0.0.1:#{tomcat_port}/client-premium\n\n"
     puts "To open the Abiquo Web Console."
+    puts "\nTo SSH to the Abiquo VM type:"
+    puts "ssh -p #{ssh_port} localhost\n\n"
     puts "\nBooting the Installer...\n\n"
     File.open(target_dir + '/run.sh', 'w') do |f|
       f.puts "#!/bin/sh"
       f.puts "MEM=#{mem}"
       f.puts "TAP=vtap0"
       f.puts ""
-      f.puts "kvm -m #{mem} -drive file=#{File.basename(disk_file)} -net user,hostfwd=tcp:127.0.0.1:8980-:8080,hostfwd=tcp:127.0.0.1:2300-:22 -net nic -boot order=c > /dev/null 2>&1"
+      f.puts "kvm -m #{mem} -drive file=#{File.basename(disk_file)} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:8080,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -boot order=c > /dev/null"
       f.puts ""
       f.puts "#"
       f.puts "# Comment the above line and uncomment this to use bridged networking."
@@ -188,7 +202,7 @@ if ARGV[0] == 'instant-deploy'
       f.puts "#"
       f.puts "#kvm -m #{mem} -drive file=#{File.basename(disk_file)} -net tap,ifname=$TAP -net nic -boot order=c > /dev/null 2>&1"
     end
-    boot_vm :disk_file => disk_file, :cdrom => cdrom, :mem => mem
+    boot_vm :disk_file => disk_file, :cdrom => cdrom, :mem => mem, :tomcat_port => tomcat_port, :ssh_port => ssh_port
   end
 
   def distribution_version
@@ -201,7 +215,12 @@ if ARGV[0] == 'instant-deploy'
     disk_file = params[:disk_file]
     cdrom = params[:cdrom]
     mem = params[:mem]
-    `kvm -m 1024 -drive file=#{disk_file} -net user,hostfwd=tcp:127.0.0.1:8980-:8080,hostfwd=tcp:127.0.0.1:2300-:22 -net nic -drive file=#{cdrom},media=cdrom -boot order=cd -boot once=d > /dev/null 2>&1 `
+    tomcat_port = params[:tomcat_port]
+    ssh_port = params[:ssh_port]
+    output = `kvm -m 1024 -drive file=#{disk_file} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:8080,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -drive file=#{cdrom},media=cdrom -boot order=cd -boot once=d 2>&1 `
+    if $? != 0
+      puts "Error booting the VM: #{output}"
+    end
   end
 
   target_dir = "abiquo-instant-deploy-#{Time.now.strftime "%s"}"
@@ -222,6 +241,9 @@ if ARGV[0] == 'instant-deploy'
   print "Abiquo Instant Deploy: ".bold
   puts "One Command Cloud Builder\n\n"
   puts "Building the cloud into #{target_dir.bold} directory..."
-  install_iso(:target_dir => target_dir, :iso_url => url, :mem => cli.config[:mem])
+  install_iso(:target_dir => target_dir, :iso_url => url, :mem => cli.config[:mem],
+              :tomcat_port => cli.config[:tomcat_port],
+              :ssh_port => cli.config[:ssh_port]
+             )
 
 end
