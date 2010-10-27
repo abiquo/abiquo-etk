@@ -6,7 +6,7 @@ begin
   Jeweler::Tasks.new do |gem|
     gem.name = "abiquo-etk"
     gem.summary = %Q{Abiquo Elite Toolkit}
-    gem.description = %Q{Tools to troubleshoot your Abiquo installation}
+    gem.description = %Q{Tools to troubleshoot and manage your Abiquo installation}
     gem.email = "srubio@abiquo.com"
     gem.homepage = "http://github.com/abiquo/abiquo-etk"
     gem.authors = ["Sergio Rubio"]
