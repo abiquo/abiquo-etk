@@ -163,10 +163,13 @@ if ARGV[0] == 'instant-deploy'
       puts "Downloading Abiquo ISO..."
       cdrom = ""
       begin
-        downloader.download! iso_url, File.new(target_dir + '/instant-deploy.iso', 'w')
+        r = downloader.download! iso_url, File.new(target_dir + '/instant-deploy.iso', 'w')
+        if r.class != Net::HTTPOK
+          raise Exception
+        end
         cdrom = target_dir + '/instant-deploy.iso'
       rescue Exception
-        $stderr.puts "Error downloading Abiquo ISO. Aborting."
+        $stderr.puts "\nError downloading Abiquo ISO. Aborting."
         exit
       end
     else
