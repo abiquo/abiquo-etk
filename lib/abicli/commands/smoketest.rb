@@ -24,7 +24,7 @@ if ARGV[0] == 'smoketest'
     option :port,
       :long => '--port PORT',
       :description => 'API Server Port',
-      :default => 8080
+      :default => 80
     
     option :dc_name,
       :long => '--dc-name DCNAME',
@@ -69,11 +69,11 @@ if ARGV[0] == 'smoketest'
   begin
     puts "Creating Datacenter #{cli.config[:dc_name]} remote services..."
     rs =  dc.remoteServices
-    rs.create :type => 'VIRTUAL_FACTORY', :uri => 'http://localhost:8080/virtualfactory'
-    rs.create :type => 'STORAGE_SYSTEM_MONITOR', :uri => 'http://localhost:8080/ssm'
-    rs.create :type => 'VIRTUAL_SYSTEM_MONITOR', :uri => 'http://localhost:8080/vsm'
-    rs.create :type => 'NODE_COLLECTOR', :uri => 'http://localhost:8080/nodecollector'
-    rs.create :type => 'APPLIANCE_MANAGER', :uri => 'http://localhost:8080/am'
+    rs.create :type => 'VIRTUAL_FACTORY', :uri => 'http://localhost:80/virtualfactory'
+    rs.create :type => 'STORAGE_SYSTEM_MONITOR', :uri => 'http://localhost:80/ssm'
+    rs.create :type => 'VIRTUAL_SYSTEM_MONITOR', :uri => 'http://localhost:80/vsm'
+    rs.create :type => 'NODE_COLLECTOR', :uri => 'http://localhost:80/nodecollector'
+    rs.create :type => 'APPLIANCE_MANAGER', :uri => 'http://localhost:80/am'
     rs.create :type => 'DHCP_SERVICE', :uri => 'http://localhost:7911'
     rs.create :type => 'BPM_SERVICE', :uri => 'http://localhost:7911'
   rescue Resourceful::UnsuccessfulHttpRequestError

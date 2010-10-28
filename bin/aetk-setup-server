@@ -59,7 +59,7 @@ begin
 	end
 
   Log.info "Setting EventSink URL"
-  `abicli set event-sink-url http://#{@settings['abiquo_server_ip']}:8080/server/EventSink`
+  `abicli set event-sink-url http://#{@settings['abiquo_server_ip']}/server/EventSink`
   
   Log.info "Setting DB Properties"
   `abicli set database-host #{@settings['abiquo_db_host']}`

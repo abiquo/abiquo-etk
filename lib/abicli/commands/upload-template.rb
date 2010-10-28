@@ -194,7 +194,7 @@ if ARGV[0] == 'upload-template'
 
     option :rs_url,
       :long => '--rs-url URL',
-      :description => 'Remote Services URL (i.e. http://remote-services-ip:8080)'
+      :description => 'Remote Services URL (i.e. http://remote-services-ip)'
 
     option :debug,
       :long => '--debug',

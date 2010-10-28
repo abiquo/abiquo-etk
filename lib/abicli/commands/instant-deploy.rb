@@ -196,7 +196,7 @@ if ARGV[0] == 'instant-deploy'
       f.puts "MEM=#{mem}"
       f.puts "TAP=vtap0"
       f.puts ""
-      f.puts "kvm -m $MEM -drive file=#{File.basename(disk_file)} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:8080,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -boot order=c > /dev/null"
+      f.puts "kvm -m $MEM -drive file=#{File.basename(disk_file)} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:80,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -boot order=c > /dev/null"
       f.puts ""
       f.puts "#"
       f.puts "# Comment the above line and uncomment this to use bridged networking."
@@ -220,7 +220,7 @@ if ARGV[0] == 'instant-deploy'
     mem = params[:mem]
     tomcat_port = params[:tomcat_port]
     ssh_port = params[:ssh_port]
-    output = `kvm -m 1024 -drive file=#{disk_file} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:8080,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -drive file=#{cdrom},media=cdrom -boot order=cd -boot once=d 2>&1 `
+    output = `kvm -m 1024 -drive file=#{disk_file} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:80,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -drive file=#{cdrom},media=cdrom -boot order=cd -boot once=d 2>&1 `
     if $? != 0
       puts "Error booting the VM: #{output}"
     end
