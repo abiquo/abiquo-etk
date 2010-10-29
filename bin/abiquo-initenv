@@ -1,0 +1,136 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'abiquo-etk'
+
+def create_schemas(user = 'root', password = '')
+  log = AETK::Log.instance
+  cmd = ''
+  if password.strip.chomp.empty? 
+    cmd = "mysql -u #{user} "
+  else
+    cmd = "mysql -u #{user} -p#{password} "
+  end
+
+  if `#{cmd} -e 'show databases'|grep kinton`.strip.chomp.empty?
+    cib = false
+    if File.exist? '/etc/abiquo-release'
+      if File.readlines('/etc/abiquo-release').join =~ /cloud-in-a-box/
+        log.info 'Cloud in a Box profile found'
+        cib = true
+      end
+    end
+    if cib
+      out = `mysql -u root < /usr/share/doc/abiquo-16-pocsetup/cloud-in-a-box.sql`
+      if $?.exitstatus == 0 
+        log.info 'cloud-in-a-box schema imported succesfully.'
+      else
+        log.error "Error importing cloud-in-a-box schema: #{out}"
+      end
+    else
+      out = `mysql -u root < /usr/share/doc/abiquo-server/database/kinton-schema.sql`
+      if $?.exitstatus == 0 
+        log.info 'kinton-schema imported succesfully.'
+      else
+        log.error "Error importing kinton-schema: #{out}"
+      end
+      out = `mysql -u root < /usr/share/doc/abiquo-server/database/kinton-premium-schema.sql`
+      if $?.exitstatus == 0 
+        log.info 'kinton-premium-schema imported succesfully.'
+      else
+        log.error "Error importing kinton-premium-schema: #{out}"
+      end
+    end
+  else
+    log.warn 'kinton schema found. Skipping schema creation.'
+  end
+  
+end
+
+def init_server_install
+  config_file ='/etc/sysconfig/abiquo-server'
+  log = AETK::Log.instance
+
+  log.info "Server install detected. Setting up the environment."
+  begin
+    if File.exist? config_file 
+      @settings = abiquo_server_settings
+    else
+      log.error "Config file #{config_file} does not exist. Exit."
+      exit
+    end
+
+    log.info "Setting EventSink URL"
+    `abicli set event-sink-url http://#{@settings['abiquo_server_ip']}/server/EventSink`
+    
+    log.info "Setting DB Properties"
+    `abicli set database-host #{@settings['abiquo_db_host']}`
+    `abicli set database-user root`
+    `abicli set database-password #{@settings['abiquo_db_password']}`
+    `abicli set mail-server 127.0.0.1`
+      
+    log.info "Creating database schemas..."
+    create_schemas
+  rescue Exception => e
+    log.error "Unhandled exception: #{e.message}"
+    log.error "Unhandled exception: #{e.backtrace}"
+  end
+end
+
+def init_remote_services_install
+  config_file ='/etc/sysconfig/abiquo-rs'
+
+  log = AETK::Log.instance
+  log.info "Remote Services install detected. Setting up the environment."
+
+  begin
+    @settings = {}
+    if File.exist? config_file
+      @settings = abiquo_rs_settings
+    else
+      log.error "Config file #{config_file} does not exist. Exit."
+      exit
+    end
+    repo = @settings['abiquo_nfs_repository']
+    if repo =~ /localhost|127.0.0.1/
+      if File.exist? '/etc/sysconfig/abiquo-server'
+        log.info "NFS Repository points to localhost, fixing..."
+        s = abiquo_server_settings
+        repo = s['abiquo_server_ip'] + ':/opt/vm_repository'
+      end
+    end
+    log.info "Setting nfs-repository to #{repo}"
+    `abicli set nfs-repository #{repo}`
+    log.info "Setting cifs-repository to #{repo}"
+    `abicli set cifs-repository //your-cifs-server-ip-here/opt/vm_repository`
+
+  rescue Exception => e
+    log.error "Unhandled exception: #{e.message}"
+    log.error "Unhandled exception: #{e.backtrace}"
+  end
+end
+
+def init_v2v_install
+  config_file ='/etc/sysconfig/abiquo-server'
+  log = AETK::Log.instance
+  log.info "V2V install detected. Setting up the environment."
+end
+
+def init_rs_plus_v2v_install
+  init_remote_services_install
+  init_v2v_install
+end
+
+AETK::Log.instance.info "Running abiquo-initenv..."
+case AETK::System.detect_install_type 
+when :server
+  init_server_install
+when :remote_services
+  init_remote_services_install
+when :v2v
+  init_v2v_install
+when :rs_plus_v2v
+  init_rs_plus_v2v_install
+else
+  AETK::Log.instance.error "Couldn't detect install type. Skipping first setup."
+end

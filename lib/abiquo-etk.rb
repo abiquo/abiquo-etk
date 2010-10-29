@@ -29,12 +29,6 @@ ABIQUO_NODECOLLECTOR_CONFIG = '/opt/abiquo/config/nodecollector.xml'
 ABIQUO_AM_CONFIG = '/opt/abiquo/config/am.xml'
 ABIQUO_BPMASYNC_CONFIG = '/opt/abiquo/config/bpm-async.xml'
 
-#
-# INIT
-#
-Log = Logger.new "check.log"
-Log.level = Logger::INFO
-
 def abiquo_edition
 end
 
@@ -137,6 +131,15 @@ def abiquo_bpmasync_config
 end
 
 module AETK
+  
+  class Log
+
+    def self.instance(file = '/var/log/abiquo-etk.log')
+      @@logger ||= Logger.new file
+    end
+
+  end
+
 
   module OutputFormatters
     
@@ -147,23 +150,39 @@ module AETK
   end
 
   def detect_install_type
-    if RPMUtils.rpm_installed? 'abiquo-16-pocsetup'
-      return :monolithic
-    end
-    
-    if RPMUtils.rpm_installed? 'abiquo-remote-services'
-      return :remote_services
-    end
-    
-    if RPMUtils.rpm_installed? 'abiquo-v2v'
-      return :remote_v2v
-    end
+    AETK::System.detect_install_type
+  end
 
-    if RPMUtils.rpm_installed? 'abiquo-server'
-      return :server
-    end
-    return :unknown
+  class System
+    def self.detect_install_type
+      found = ['bpm-async', 'am', 'server'].each do |dir|
+        break if not File.directory?(ABIQUO_BASE_DIR + "/tomcat/webapps/#{dir}")
+      end
+      return :monolithic if found
+      
+      found = ['am', 'virtualfactory', 'bpm-async'].each do |dir|
+        break if not File.directory?(ABIQUO_BASE_DIR + "/tomcat/webapps/#{dir}")
+      end
+      return :rs_plus_v2v if found
+      
+      found = ['am', 'virtualfactory'].each do |dir|
+        break if not File.directory?(ABIQUO_BASE_DIR + "/tomcat/webapps/#{dir}")
+      end
+      return :remote_services if found
+      
+      found = ['server', 'api'].each do |dir|
+        break if not File.directory?(ABIQUO_BASE_DIR + "/tomcat/webapps/#{dir}")
+      end
+      return :server if found
+      
+      found = ['bpm-async'].each do |dir|
+        break if not File.directory?(ABIQUO_BASE_DIR + "/tomcat/webapps/#{dir}")
+      end
+      return :v2v if found
 
+      return :unknown
+
+    end
   end
 
 
@@ -174,9 +193,10 @@ module AETK
       puts "Loading extra plugins...".yellow.bold
       plugins.concat( Dir[extra_plugins_dir + '/*.rb'].sort )
     end
-    if Log.level == Logger::DEBUG
+    log = Log.instance
+    if log.level == Logger::DEBUG
       plugins.each do |p|
-        puts "  #{File.basename(p,'.rb')}..."
+        log.debug "  #{File.basename(p,'.rb')}..."
       end
     end
     plugins.each do |p|

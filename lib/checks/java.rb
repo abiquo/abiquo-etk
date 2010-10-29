@@ -1,13 +1,14 @@
 if abiquo_installed?
 
 def java_ok?
+  log = AETK::Log.instance
   if not File.exist? JAVA_BIN
-    Log.error "Java binary not found in #{JAVA_BIN}"
+    log.error "Java binary not found in #{JAVA_BIN}"
     return false
   end
 
   if `java -version 2>&1 | grep '64-Bit Server'`.empty?
-    Log.error "Java 64-Bit runtime not found"
+    log.error "Java 64-Bit runtime not found"
     return false
   end
 

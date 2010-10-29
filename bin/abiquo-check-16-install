@@ -72,7 +72,7 @@ class MyCLI
     :long  => "--debug",
     :description => "Set the log level to debug",
     #:required => true,
-    :proc => Proc.new { |l| Log.level = Logger::DEBUG }
+    :proc => Proc.new { |l| AETK::Log.instance.level = Logger::DEBUG }
   
   option :print_configs,
     :long  => "--print-configs",

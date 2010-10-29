@@ -5,14 +5,14 @@
 
 Gem::Specification.new do |s|
   s.name = %q{abiquo-etk}
-  s.version = "0.4.27"
+  s.version = "0.4.28"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sergio Rubio"]
-  s.date = %q{2010-10-28}
+  s.date = %q{2010-10-29}
   s.description = %q{Tools to troubleshoot and manage your Abiquo installation}
   s.email = %q{srubio@abiquo.com}
-  s.executables = ["abiquo-check-16-install", "aetk-setup-rs", "aetk-setup-v2v", "abicli", "aetk-setup-server"]
+  s.executables = ["abiquo-check-16-install", "abicli", "abiquo-initenv"]
   s.extra_rdoc_files = [
     "LICENSE",
      "README.rdoc",
@@ -30,9 +30,6 @@ Gem::Specification.new do |s|
      "abiquo-etk.spec",
      "bin/abicli",
      "bin/abiquo-check-16-install",
-     "bin/aetk-setup-rs",
-     "bin/aetk-setup-server",
-     "bin/aetk-setup-v2v",
      "lib/abicli/commands/instant-deploy.rb",
      "lib/abicli/commands/remote-services-settings.rb",
      "lib/abicli/commands/server-settings.rb",

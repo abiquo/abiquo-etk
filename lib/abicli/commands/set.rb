@@ -156,7 +156,11 @@ if ARGV[0] == 'set'
       exit 0
     end
     file = File.join(ABIQUO_BASE_DIR, "config/#{comp}.xml")
-    config_set_node(file, path, val, true)
+    if not File.exist?(file)
+      AETK::Log.instance.error "File #{file} does not exist. Skip setting the property: #{path}"
+    else
+      config_set_node(file, path, val, true)
+    end
   rescue NoMethodError => e
     $stderr.puts e.message
     $stderr.puts e.backtrace

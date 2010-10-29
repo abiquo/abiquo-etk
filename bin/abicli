@@ -34,6 +34,10 @@ def config_get_node(cf, path)
 end
 
 def config_set_attribute(file, path, attrname, val, write_changes = false)
+  if not File.exist?(file)
+    AETK::Log.instance.error "config_set_attribute: file #{file} not found."
+  end
+
   doc = Nokogiri::XML(File.new(file))
 	doc.root.xpath(path).first[attrname] = (val||'')
   if write_changes
@@ -41,6 +45,7 @@ def config_set_attribute(file, path, attrname, val, write_changes = false)
       f.puts doc.to_xml
     end
   end
+
   return doc
 end
 
