@@ -16,6 +16,18 @@ if ARGV[0] == 'instant-deploy'
   require 'uri'
   require 'fileutils'
 
+  class SystemCommands
+
+    def self.kvm=(path)
+      @@kvm = path
+    end
+
+    def self.kvm
+      @@kvm
+    end
+    
+  end
+
   class HTTPDownloader
     def self.match?(uri)
       # URI.parse barfs on '<drive letter>:\\files \on\ windows'
@@ -90,8 +102,18 @@ if ARGV[0] == 'instant-deploy'
 
     option :tomcat_port,
       :long => '--tomcat-port PORT',
-      :description => 'Forwarded Tomcat port (Default 8980',
+      :description => 'Forwarded Tomcat port (Default 8980)',
       :default => '8980'
+
+    option :vnc,
+      :long => '--vnc',
+      :description => 'Use VNC instead of SDL/Graphical display',
+      :default => false
+
+    option :vnc_display,
+      :long => '--vnc-display DISP',
+      :description => 'Use VNC display DISP',
+      :default => 0
     
     option :help,
       :short => "-h",
@@ -103,19 +125,12 @@ if ARGV[0] == 'instant-deploy'
       :exit => 0
   end
 
-  def preflight_check
-    #
-    # Check if this is Ubuntu
-    #
-    if not File.exists? '/etc/lsb-release'
-      $stderr.puts "\nYou are not running Ubuntu. Other distributions are not supported.\n\n"
+  def pfcheck_ubuntu
+    if (File.read('/etc/lsb-release') !~ /DISTRIB_ID=Ubuntu/)
+      $stderr.puts "\nUbuntu not found. Your distribution is not supported.\n\n"
       exit
     end
-    if not (File.read('/etc/lsb-release') =~ /DISTRIB_ID=Ubuntu/)
-      $stderr.puts "\nYou are not running Ubuntu. Other distributions are not supported\n\n"
-      exit
-    end
-
+    
     #
     # Check if KVM installed
     #
@@ -125,6 +140,40 @@ if ARGV[0] == 'instant-deploy'
       exit
     end
     
+    SystemCommands.kvm = '/usr/bin/kvm'
+  end
+
+  def pfcheck_redhat
+    if File.read('/etc/redhat-release') !~ /^(FrameOS|CentOS)/
+      $stderr.puts "\nRHEL not found. Your distribution is not supported.\n\n"
+      exit
+    end
+    
+    #
+    # Check if KVM installed
+    #
+    if `which /usr/libexec/qemu-kvm`.strip.chomp.empty?
+      $stderr.puts "\nKVM not found. Install it first:\n\n"
+      $stderr.puts "yum install kvm\n\n"
+      exit
+    end
+    
+    SystemCommands.kvm = '/usr/libexec/qemu-kvm'
+  end
+
+  def preflight_check
+    #
+    # Check if this is Ubuntu
+    #
+    if File.exist?('/etc/lsb-release')
+      pfcheck_ubuntu
+    elsif File.exist?('/etc/redhat-release')
+      pfcheck_redhat
+    else
+      $stderr.puts "\nOnly Ubuntu and RHEL distributions are supported.\n\n"
+      exit
+    end
+
     #
     # Check if qemu-img installed
     #
@@ -142,6 +191,10 @@ if ARGV[0] == 'instant-deploy'
     mem = params[:mem]
     tomcat_port = params[:tomcat_port]
     ssh_port = params[:ssh_port]
+    graphics = ''
+    if params[:vnc]
+      graphics = "--vnc :#{params[:vnc_display]}"
+    end
     # Create target directory
     begin
       FileUtils.mkdir(target_dir)
@@ -196,34 +249,25 @@ if ARGV[0] == 'instant-deploy'
       f.puts "MEM=#{mem}"
       f.puts "TAP=vtap0"
       f.puts ""
-      f.puts "kvm -m $MEM -drive file=#{File.basename(disk_file)} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:80,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -boot order=c > /dev/null"
+      f.puts "#{SystemCommands.kvm} #{graphics} -m $MEM -drive file=#{File.basename(disk_file)} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:80,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -boot order=c > /dev/null"
       f.puts ""
       f.puts "#"
       f.puts "# Comment the above line and uncomment this to use bridged networking."
       f.puts "# You will need to have a working bridge setup in order to use this."
       f.puts "# Update TAP variable above to fill your needs."
       f.puts "#"
-      f.puts "#kvm -m $MEM -drive file=#{File.basename(disk_file)} -net tap,ifname=$TAP -net nic -boot order=c > /dev/null 2>&1"
+      f.puts "##{SystemCommands.kvm} #{graphics} -m $MEM -drive file=#{File.basename(disk_file)} -net tap,ifname=$TAP -net nic -boot order=c > /dev/null 2>&1"
     end
-    boot_vm :disk_file => disk_file, :cdrom => cdrom, :mem => mem, :tomcat_port => tomcat_port, :ssh_port => ssh_port
+    output = `#{SystemCommands.kvm} #{graphics} -m 1024 -drive file=#{disk_file} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:80,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -drive file=#{cdrom},media=cdrom -boot order=cd -boot once=d 2>&1 `
+    if $? != 0
+      puts "Error booting the VM: #{output}"
+    end
   end
 
   def distribution_version
     /DISTRIB_DESCRIPTION="(.*)"/.match File.read('/etc/lsb-release')
     version = $1.splitp[1] || '0'
     version
-  end
-
-  def boot_vm(params = {})
-    disk_file = params[:disk_file]
-    cdrom = params[:cdrom]
-    mem = params[:mem]
-    tomcat_port = params[:tomcat_port]
-    ssh_port = params[:ssh_port]
-    output = `kvm -m 1024 -drive file=#{disk_file} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:80,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -drive file=#{cdrom},media=cdrom -boot order=cd -boot once=d 2>&1 `
-    if $? != 0
-      puts "Error booting the VM: #{output}"
-    end
   end
 
   target_dir = "abiquo-instant-deploy-#{Time.now.strftime "%s"}"
@@ -246,7 +290,9 @@ if ARGV[0] == 'instant-deploy'
   puts "Building the cloud into #{target_dir.bold} directory..."
   install_iso(:target_dir => target_dir, :iso_url => url, :mem => cli.config[:mem],
               :tomcat_port => cli.config[:tomcat_port],
-              :ssh_port => cli.config[:ssh_port]
+              :ssh_port => cli.config[:ssh_port],
+              :vnc => cli.config[:vnc],
+              :vnc_display => cli.config[:vnc_display]
              )
 
 end
