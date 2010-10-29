@@ -256,7 +256,7 @@ if ARGV[0] == 'instant-deploy'
       f.puts "# You will need to have a working bridge setup in order to use this."
       f.puts "# Update TAP variable above to fill your needs."
       f.puts "#"
-      f.puts "##{SystemCommands.kvm} #{graphics} -m $MEM -drive file=#{File.basename(disk_file)} -net tap,ifname=$TAP -net nic -boot order=c > /dev/null 2>&1"
+      f.puts "#sudo #{SystemCommands.kvm} #{graphics} -m $MEM -drive file=#{File.basename(disk_file)} -net tap,ifname=$TAP -net nic -boot order=c > /dev/null 2>&1"
     end
     output = `#{SystemCommands.kvm} #{graphics} -m 1024 -drive file=#{disk_file} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:80,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -drive file=#{cdrom},media=cdrom -boot order=cd -boot once=d 2>&1 `
     if $? != 0
