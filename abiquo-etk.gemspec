@@ -30,6 +30,7 @@ Gem::Specification.new do |s|
      "abiquo-etk.spec",
      "bin/abicli",
      "bin/abiquo-check-16-install",
+     "bin/abiquo-initenv",
      "lib/abicli/commands/instant-deploy.rb",
      "lib/abicli/commands/remote-services-settings.rb",
      "lib/abicli/commands/server-settings.rb",
