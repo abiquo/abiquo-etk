@@ -51,7 +51,6 @@ def init_server_install
   config_file ='/etc/sysconfig/abiquo-server'
   log = AETK::Log.instance
 
-  log.info "Server install detected. Setting up the environment."
   begin
     if File.exist? config_file 
       @settings = abiquo_server_settings
@@ -81,7 +80,6 @@ def init_remote_services_install
   config_file ='/etc/sysconfig/abiquo-rs'
 
   log = AETK::Log.instance
-  log.info "Remote Services install detected. Setting up the environment."
 
   begin
     @settings = {}
@@ -113,7 +111,6 @@ end
 def init_v2v_install
   config_file ='/etc/sysconfig/abiquo-server'
   log = AETK::Log.instance
-  log.info "V2V install detected. Setting up the environment."
 end
 
 def init_rs_plus_v2v_install
@@ -123,13 +120,22 @@ end
 
 AETK::Log.instance.info "Running abiquo-initenv..."
 case AETK::System.detect_install_type 
+when :monolithic
+  log.info "Monolithic install detected. Setting up the environment."
+  init_server_install
+  init_remote_services_install
+  init_v2v_install
 when :server
+  log.info "Server install detected. Setting up the environment."
   init_server_install
 when :remote_services
+  log.info "Remote Services install detected. Setting up the environment."
   init_remote_services_install
 when :v2v
+  log.info "V2V install detected. Setting up the environment."
   init_v2v_install
 when :rs_plus_v2v
+  log.info "Remote Services + V2V install detected. Setting up the environment."
   init_rs_plus_v2v_install
 else
   AETK::Log.instance.error "Couldn't detect install type. Skipping first setup."
