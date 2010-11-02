@@ -118,7 +118,8 @@ def init_rs_plus_v2v_install
   init_v2v_install
 end
 
-AETK::Log.instance.info "Running abiquo-initenv..."
+log = AETK::Log.instance
+log.info "Running abiquo-initenv..."
 case AETK::System.detect_install_type 
 when :monolithic
   log.info "Monolithic install detected. Setting up the environment."
@@ -139,4 +140,39 @@ when :rs_plus_v2v
   init_rs_plus_v2v_install
 else
   AETK::Log.instance.error "Couldn't detect install type. Skipping first setup."
+end
+
+#
+# Try to apply netapp ontap connector settings
+#
+if File.exist?('/opt/abiquo/ontap/tomcat/webapps/ROOT/WEB-INF/classes/config.xml')
+  AETK::Log.info "Abiquo ONTAP connector found."
+  if File.exist?('/etc/sysconfig/abiquo-rs')
+    buf = File.read '/etc/sysconfig/abiquo-rs'
+    buf.each_line do |l|
+      if l =~ /ontap_user/
+        user = l.split('=').last.strip.chomp rescue ''
+        AETK::Log.info "ONTAP: Configure ontap-user"
+        `abicli set ontap-user #{user}`
+      end
+    end
+    buf.each_line do |l|
+      if l =~ /ontap_password/
+        password = l.split('=').last.strip.chomp rescue ''
+        AETK::Log.info "ONTAP: Configure ontap-password"
+        `abicli set ontap-password #{password}`
+      end
+    end
+    buf.each_line do |l|
+      if l =~ /ontap_server_ip/
+        server = l.split('=').last.strip.chomp rescue ''
+        AETK::Log.info "ONTAP: Configure ontap-server-ip"
+        `abicli set ontap-server-ip #{server}`
+      end
+    end
+  else
+    AETK::Log.warn "/etc/sysconfig/abiquo-rs config file not found. Skipping ONTAP configuration."
+  end
+else
+  AETK::Log.info "Abiquo ONTAP connector NOT found."
 end

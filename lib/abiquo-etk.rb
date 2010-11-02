@@ -134,6 +134,22 @@ module AETK
   
   class Log
 
+    def self.debug(mgs)
+      instance.debug msg
+    end
+
+    def self.info(msg)
+      instance.info msg
+    end
+
+    def self.error(msg)
+      instance.error msg
+    end
+
+    def self.warn(msg)
+      instance.warn msg
+    end
+
     def self.instance(file = '/var/log/abiquo-etk.log')
       @@logger ||= Logger.new file
     end
