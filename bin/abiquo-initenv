@@ -13,33 +13,17 @@ def create_schemas(user = 'root', password = '')
   end
 
   if `#{cmd} -e 'show databases'|grep kinton`.strip.chomp.empty?
-    cib = false
-    if File.exist? '/etc/abiquo-release'
-      if File.readlines('/etc/abiquo-release').join =~ /cloud-in-a-box/
-        log.info 'Cloud in a Box profile found'
-        cib = true
-      end
-    end
-    if cib
-      out = `mysql -u root < /usr/share/doc/abiquo-16-pocsetup/cloud-in-a-box.sql`
-      if $?.exitstatus == 0 
-        log.info 'cloud-in-a-box schema imported succesfully.'
-      else
-        log.error "Error importing cloud-in-a-box schema: #{out}"
-      end
+    out = `mysql -u root < /usr/share/doc/abiquo-server/database/kinton-schema.sql`
+    if $?.exitstatus == 0 
+      log.info 'kinton-schema imported succesfully.'
     else
-      out = `mysql -u root < /usr/share/doc/abiquo-server/database/kinton-schema.sql`
-      if $?.exitstatus == 0 
-        log.info 'kinton-schema imported succesfully.'
-      else
-        log.error "Error importing kinton-schema: #{out}"
-      end
-      out = `mysql -u root < /usr/share/doc/abiquo-server/database/kinton-premium-schema.sql`
-      if $?.exitstatus == 0 
-        log.info 'kinton-premium-schema imported succesfully.'
-      else
-        log.error "Error importing kinton-premium-schema: #{out}"
-      end
+      log.error "Error importing kinton-schema: #{out}"
+    end
+    out = `mysql -u root < /usr/share/doc/abiquo-server/database/kinton-premium-schema.sql`
+    if $?.exitstatus == 0 
+      log.info 'kinton-premium-schema imported succesfully.'
+    else
+      log.error "Error importing kinton-premium-schema: #{out}"
     end
   else
     log.warn 'kinton schema found. Skipping schema creation.'
