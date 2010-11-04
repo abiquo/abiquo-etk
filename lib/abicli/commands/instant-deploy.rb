@@ -86,6 +86,11 @@ if ARGV[0] == 'instant-deploy'
   class InstantDeployCLI
     include Mixlib::CLI
 
+    option :target_dir,
+      :long => '--target-dir NAME',
+      :description => 'Directory where the VM disk and ISO are created',
+      :default => "abiquo-instant-deploy-#{Time.now.strftime "%s"}"
+
     option :iso_url,
       :long => '--iso-url URL',
       :description => 'Abiquo ISO URL'
@@ -270,14 +275,13 @@ if ARGV[0] == 'instant-deploy'
     version
   end
 
-  target_dir = "abiquo-instant-deploy-#{Time.now.strftime "%s"}"
-
   trap("INT") { puts "\n\nCleaning Environment..."; exit } 
 
   preflight_check
 
   cli = InstantDeployCLI.new
   cli.parse_options
+  target_dir = cli.config[:target_dir]
   url = cli.config[:iso_url]
   if url.nil?
     $stderr.puts "\n--iso-url argument is mandatory.\n\n"
