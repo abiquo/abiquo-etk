@@ -90,6 +90,11 @@ if ARGV[0] == 'instant-deploy'
       :long => '--target-dir NAME',
       :description => 'Directory where the VM disk and ISO are created',
       :default => "abiquo-instant-deploy-#{Time.now.strftime "%s"}"
+    
+    option :vm_name,
+      :long => '--vm-name NAME',
+      :description => 'Virtual Machine name',
+      :default => "instant-deploy"
 
     option :iso_url,
       :long => '--iso-url URL',
@@ -197,6 +202,8 @@ if ARGV[0] == 'instant-deploy'
     tomcat_port = params[:tomcat_port]
     ssh_port = params[:ssh_port]
     graphics = ''
+    vm_name = params[:vm_name]
+
     if params[:vnc]
       graphics = "--vnc :#{params[:vnc_display]}"
     end
@@ -254,16 +261,16 @@ if ARGV[0] == 'instant-deploy'
       f.puts "MEM=#{mem}"
       f.puts "TAP=vtap0"
       f.puts ""
-      f.puts "#{SystemCommands.kvm} #{graphics} -m $MEM -drive file=#{File.basename(disk_file)} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:80,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -boot order=c > /dev/null"
+      f.puts "#{SystemCommands.kvm} -name #{vm_name} #{graphics} -m $MEM -drive file=#{File.basename(disk_file)} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:80,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -boot order=c > /dev/null"
       f.puts ""
       f.puts "#"
       f.puts "# Comment the above line and uncomment this to use bridged networking."
       f.puts "# You will need to have a working bridge setup in order to use this."
       f.puts "# Update TAP variable above to fill your needs."
       f.puts "#"
-      f.puts "#sudo #{SystemCommands.kvm} #{graphics} -m $MEM -drive file=#{File.basename(disk_file)} -net tap,ifname=$TAP -net nic -boot order=c > /dev/null 2>&1"
+      f.puts "#sudo #{SystemCommands.kvm} -name #{vm_name} #{graphics} -m $MEM -drive file=#{File.basename(disk_file)} -net tap,ifname=$TAP -net nic -boot order=c > /dev/null 2>&1"
     end
-    output = `#{SystemCommands.kvm} #{graphics} -m 1024 -drive file=#{disk_file} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:80,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -drive file=#{cdrom},media=cdrom -boot order=cd -boot once=d 2>&1 `
+    output = `#{SystemCommands.kvm} -name #{vm_name} #{graphics} -m 1024 -drive file=#{disk_file} -net user,hostfwd=tcp:0.0.0.0:#{tomcat_port}-:80,hostfwd=tcp:0.0.0.0:#{ssh_port}-:22 -net nic -drive file=#{cdrom},media=cdrom -boot order=cd -boot once=d 2>&1 `
     if $? != 0
       puts "Error booting the VM: #{output}"
     end
@@ -294,6 +301,7 @@ if ARGV[0] == 'instant-deploy'
   puts "Building the cloud into #{target_dir.bold} directory..."
   install_iso(:target_dir => target_dir, :iso_url => url, :mem => cli.config[:mem],
               :tomcat_port => cli.config[:tomcat_port],
+              :vm_name => cli.config[:vm_name],
               :ssh_port => cli.config[:ssh_port],
               :vnc => cli.config[:vnc],
               :vnc_display => cli.config[:vnc_display]
