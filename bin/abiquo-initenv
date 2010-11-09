@@ -127,6 +127,35 @@ else
 end
 
 #
+# Set nofile limits in /etc/security/limits.conf
+#
+begin
+  slimits_found = false
+  hlimits_found = false
+  File.readlines('/etc/security/limits.conf').each do |l|
+    slimits_found = true if l =~ /^\s*root\s+soft\s+nofile\s+4096/
+    hlimits_found = true if l =~ /^\s*root\s+hard\s+nofile\s+10240/
+  end
+  if not slimits_found
+    AETK::Log.info "Setting soft nofile limits to 4096"
+    File.open('/etc/security/limits.conf', 'a') do |f|
+      f.puts "root soft nofile 4096"
+    end
+  end
+  if not hlimits_found
+    AETK::Log.info "Setting hard nofile limits to 10240"
+    File.open('/etc/security/limits.conf', 'a') do |f|
+      f.puts "root hard nofile 10240"
+    end
+  end
+  if slimits_found and hlimits_found
+    AETK::Log.info "System hard/soft nofile limits Ok. Not updating."
+  end
+rescue Exception => e
+  AETK::Log.error "Error setting nofile limits: #{e.message}"
+end
+
+#
 # Try to apply netapp ontap connector settings
 #
 if File.exist?('/opt/abiquo/ontap/tomcat/webapps/ROOT/WEB-INF/classes/config.xml')
