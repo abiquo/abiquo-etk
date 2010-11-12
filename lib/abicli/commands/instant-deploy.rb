@@ -154,7 +154,7 @@ if ARGV[0] == 'instant-deploy'
   end
 
   def pfcheck_redhat
-    if File.read('/etc/redhat-release') !~ /^(FrameOS|CentOS)/
+    if File.read('/etc/redhat-release') !~ /^(FrameOS|CentOS|Red Hat Enterprise|Fedora)/
       $stderr.puts "\nRHEL not found. Your distribution is not supported.\n\n"
       exit
     end

@@ -71,10 +71,10 @@ end
 
 task :updatepkg => [:build, :tarball] do
   version = File.read('VERSION').strip.chomp
-  `rm ~/Work/abiquo/git/abiquo-ce-rpms/abiquo-platform/abiquo-etk/abiquo-etk*.tar.gz`
-  `cp ../abiquo-etk-#{version}.tar.gz ~/Work/abiquo/git/abiquo-ce-rpms/abiquo-platform/abiquo-etk/`
-  `cp abiquo-etk.spec ~/Work/abiquo/git/abiquo-ce-rpms/abiquo-platform/abiquo-etk/`
-  `cp pkg/abiquo-etk-#{version}.gem ~/Work/abiquo/git/abiquo-ce-rpms/abiquo-platform/abiquo-etk/`
+  `rm ~/Work/abiquo/git/abiquo-common-rpms/abiquo-etk/abiquo-etk*.tar.gz`
+  `cp ../abiquo-etk-#{version}.tar.gz ~/Work/abiquo/git/abiquo-common-rpms/abiquo-etk/`
+  `cp abiquo-etk.spec ~/Work/abiquo/git/abiquo-common-rpms/abiquo-etk/`
+  `cp pkg/abiquo-etk-#{version}.gem ~/Work/abiquo/git/abiquo-common-rpms/abiquo-etk/`
 end
 
 
