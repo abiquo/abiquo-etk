@@ -145,7 +145,11 @@ module AETK
     end
 
     def self.instance(file = '/var/log/abiquo-etk.log')
-      @@logger ||= Logger.new file
+      begin
+        @@logger ||= Logger.new file
+      rescue Exception
+        @@logger ||= Logger.new $stderr
+      end
     end
 
   end
