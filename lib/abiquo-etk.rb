@@ -32,7 +32,7 @@ ABIQUO_BPMASYNC_CONFIG = '/opt/abiquo/config/bpm-async.xml'
 def abiquo_edition
 end
 
-def abiquo_server_settings(file = '/etc/sysconfig/abiquo-server')
+def abiquo_server_settings(file = '/opt/abiquo/config/abiquo.properties')
 	settings = {}
   File.read(file).each_line do |l|
     next if l.strip.chomp.empty?
@@ -42,14 +42,8 @@ def abiquo_server_settings(file = '/etc/sysconfig/abiquo-server')
   settings
 end
 
-def abiquo_rs_settings(file = '/etc/sysconfig/abiquo-rs')
-	settings = {}
-  File.read(file).each_line do |l|
-    next if l.strip.chomp.empty?
-    key,val = l.strip.chomp.split('=')
-    settings[key.strip.chomp] = val.strip.chomp rescue ''
-  end
-  settings
+def abiquo_rs_settings(file = '/opt/abiquo/config/abiquo.properties')
+  abiquo_server_settings
 end
 
 def abiquo_base_dir

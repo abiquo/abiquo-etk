@@ -32,55 +32,46 @@ def create_schemas(user = 'root', password = '')
 end
 
 def init_server_install
-  config_file ='/etc/sysconfig/abiquo-server'
+  config_file ='/opt/abiquo/config/abiquo.properties'
   log = AETK::Log.instance
 
   begin
     if File.exist? config_file 
-      @settings = abiquo_server_settings
+      settings = abiquo_server_settings
     else
       log.error "Config file #{config_file} does not exist. Exit."
       exit
     end
 
-    log.info "Setting EventSink URL"
-    `abicli set event-sink-url http://#{@settings['abiquo_server_ip']}/server/EventSink`
-    
     log.info "Setting DB Properties"
-    `abicli set database-host #{@settings['abiquo_db_host']}`
+    `abicli set database-host #{settings['abiquo.database.host']}`
     `abicli set database-user root`
-    `abicli set database-password #{@settings['abiquo_db_password']}`
+    `abicli set database-password #{settings['abiquo.database.password']}`
     `abicli set mail-server 127.0.0.1`
       
     log.info "Creating database schemas..."
     create_schemas
   rescue Exception => e
     log.error "Unhandled exception: #{e.message}"
-    log.error "Unhandled exception: #{e.backtrace}"
+    log.error "BACKTRACE: #{e.backtrace}"
+    raise e
   end
 end
 
 def init_remote_services_install
-  config_file ='/etc/sysconfig/abiquo-rs'
+  config_file ='/opt/abiquo/config/abiquo.properties'
 
   log = AETK::Log.instance
 
   begin
-    @settings = {}
+    settings = {}
     if File.exist? config_file
-      @settings = abiquo_rs_settings
+      settings = abiquo_rs_settings
     else
       log.error "Config file #{config_file} does not exist. Exit."
       exit
     end
-    repo = @settings['abiquo_nfs_repository']
-    if repo =~ /localhost|127.0.0.1/
-      if File.exist? '/etc/sysconfig/abiquo-server'
-        log.info "NFS Repository points to localhost, fixing..."
-        s = abiquo_server_settings
-        repo = s['abiquo_server_ip'] + ':/opt/vm_repository'
-      end
-    end
+    repo = settings['abiquo.appliancemanager.repositoryLocation']
     log.info "Setting nfs-repository to #{repo}"
     `abicli set nfs-repository #{repo}`
     log.info "Setting cifs-repository to #{repo}"
@@ -88,13 +79,12 @@ def init_remote_services_install
 
   rescue Exception => e
     log.error "Unhandled exception: #{e.message}"
-    log.error "Unhandled exception: #{e.backtrace}"
+    log.error "BACKTRACE: #{e.backtrace}"
+    raise e
   end
 end
 
 def init_v2v_install
-  config_file ='/etc/sysconfig/abiquo-server'
-  log = AETK::Log.instance
 end
 
 def init_rs_plus_v2v_install
@@ -155,37 +145,3 @@ rescue Exception => e
   AETK::Log.error "Error setting nofile limits: #{e.message}"
 end
 
-#
-# Try to apply netapp ontap connector settings
-#
-if File.exist?('/opt/abiquo/ontap/tomcat/webapps/ROOT/WEB-INF/classes/config.xml')
-  AETK::Log.info "Abiquo ONTAP connector found."
-  if File.exist?('/etc/sysconfig/abiquo-rs')
-    buf = File.read '/etc/sysconfig/abiquo-rs'
-    buf.each_line do |l|
-      if l =~ /ontap_user/
-        user = l.split('=').last.strip.chomp rescue ''
-        AETK::Log.info "ONTAP: Configure ontap-user"
-        `abicli set ontap-user #{user}`
-      end
-    end
-    buf.each_line do |l|
-      if l =~ /ontap_password/
-        password = l.split('=').last.strip.chomp rescue ''
-        AETK::Log.info "ONTAP: Configure ontap-password"
-        `abicli set ontap-password #{password}`
-      end
-    end
-    buf.each_line do |l|
-      if l =~ /ontap_server_ip/
-        server = l.split('=').last.strip.chomp rescue ''
-        AETK::Log.info "ONTAP: Configure ontap-server-ip"
-        `abicli set ontap-server-ip #{server}`
-      end
-    end
-  else
-    AETK::Log.warn "/etc/sysconfig/abiquo-rs config file not found. Skipping ONTAP configuration."
-  end
-else
-  AETK::Log.info "Abiquo ONTAP connector NOT found."
-end
