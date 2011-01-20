@@ -56,10 +56,10 @@ end
 def set_nfs_repository(val)
   config = IniParse.parse(File.read('/opt/abiquo/config/abiquo.properties'))
   config.save('/opt/abiquo/config/abiquo.properties.bak')
-  config['server']['abiquo.appliancemanager.repositoryLocation'] = val
-  config['server']['abiquo.virtualfactory.xenserver.repositoryLocation'] = val
-  config['server']['abiquo.virtualfactory.vmware.repositoryLocation'] = val
-  config['server']['abiquo.virtualfactory.hyperv.repositoryLocation'] = val
+  config['remote-services']['abiquo.appliancemanager.repositoryLocation'] = val
+  config['remote-services']['abiquo.virtualfactory.xenserver.repositoryLocation'] = val
+  config['remote-services']['abiquo.virtualfactory.vmware.repositoryLocation'] = val
+  config['remote-services']['abiquo.virtualfactory.hyperv.repositoryLocation'] = val
   config.save('/opt/abiquo/config/abiquo.properties')
 end
 
