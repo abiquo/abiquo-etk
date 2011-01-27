@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'fileutils'
+require 'logger'
+
+log = Logger.new '/var/log/17-nuclear-launch.log'
+
+if not File.directory?('/opt/abiquo/backup/1.6.8')
+  log.error '/opt/abiquo/backup/1.6.8 directory not found.Aborting upgrade.'
+  exit 1
+end
+
+`mkdir -p /opt/abiquo/backup/1.6.8/database/`
+output = `/usr/bin/mysqldump -R -u root kinton > /opt/abiquo/backup/1.6.8/database/kinton-#{Time.now.strftime('%F_%H%M')}.sql 2>&1`
+if $? != 0
+  log.error "MySQL backup failed: #{output}"
+end
+
+output = `/usr/bin/mysql -u root kinton 2>&1 < /usr/share/doc/abiquo-server/database/kinton-delta-1_6_8-to-1_7_0.sql`
+if $? != 0
+  log.error "Upgrading database schema failed: #{output}"
+  log.error "Aborting the upgrade."
+  exit 1
+end
+
+`/sbin/chkconfig abiquo-tomcat on > /dev/null 2>&1`
+`/sbin/chkconfig abiquo-tomcat start > /dev/null 2>&1`
+FileUtils.rm '/opt/abiquo/config/.needsupgrade'

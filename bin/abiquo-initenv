@@ -94,6 +94,34 @@ end
 
 log = AETK::Log.instance
 log.info "Running abiquo-initenv..."
+
+# Check if we need to run
+if File.exist?(ABIQUO_BASE_DIR + '/config/.configured') and \
+  (not File.exists?(ABIQUO_BASE_DIR + '/config/.needsupgrade'))
+    log.info "Ok Sargent. No need to change anything. Exit."
+    exit 0
+end
+
+begin
+  if File.exist?('/opt/abiquo/config/.needsupgrade')
+    log.info "Upgrade needed, upgrading..."
+    upgrade_script = File.readlines('/opt/abiquo/config/.needsupgrade').first
+    if not upgrade_script.nil?
+      script_file = File.dirname(__FILE__) + "/../lib/upgrades/#{upgrade_script.strip.chomp}"
+      log.info "Using upgrade script #{script_file}"
+      load script_file
+    else
+      log.error "Invalid upgrade script found in .needsupgrade file. Aborting the upgrade"
+    end
+  end
+  log.info "Upgrade completed succesfully."
+rescue Exception => e
+  log.error "Unknown error upgrading: #{e.message}"
+  log.error "BACKTRACE: #{e.backtrace}"
+  log.error "Aborting."
+  exit 1
+end
+  
 case AETK::System.detect_install_type 
 when :monolithic
   log.info "Monolithic install detected. Setting up the environment."
@@ -145,3 +173,4 @@ rescue Exception => e
   AETK::Log.error "Error setting nofile limits: #{e.message}"
 end
 
+FileUtils.touch(ABIQUO_BASE_DIR + '/config/.configured')
