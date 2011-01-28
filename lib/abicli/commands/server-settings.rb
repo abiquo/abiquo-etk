@@ -1,4 +1,5 @@
 if ARGV[0] == 'server-settings'
+  ARGV.shift
   if not File.exist?('/etc/abiquo-release')
     $stderr.puts "Abiquo release version not found. Unsupported installation."
     exit

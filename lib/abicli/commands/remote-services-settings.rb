@@ -1,24 +1,16 @@
 if ARGV[0] == 'remote-services-settings'
-  
   ARGV.shift
-
-  if not File.directory? ABIQUO_BASE_DIR
-    $stderr.puts "\n'abicli set' command is used to configure the Abiquo Platform.\nUnfortunately, I can't find the Abiquo Platform installed in this server.\n\nTry other commands.\n\n"
-    help
-    exit 1
+  if not File.exist?('/etc/abiquo-release')
+    $stderr.puts "Abiquo release version not found. Unsupported installation."
+    exit
   end
-
-  def print_remote_services_settings
-    f = ABIQUO_BASE_DIR + '/config/virtualfactory.xml'
-    doc = Nokogiri::XML(File.new(f))
-    puts
-    two_cols("NFS Repository:".bold, config_get_node(doc, 'hypervisors/xenserver/abiquoRepository'))
-    two_cols("CIFS Repository:".bold, config_get_node(doc, 'hypervisors/hyperv/destinationRepositoryPath'))
-    two_cols("Storage Link URL:".bold, config_get_node(doc, 'storagelink/address'))
-    two_cols("Storage Link User:".bold, config_get_node(doc, 'storagelink/user'))
-    two_cols("Storage Link Password:".bold, config_get_node(doc, 'storagelink/password'))
-    puts
+  rel_info = File.read('/etc/abiquo-release')
+  if rel_info =~ /Version: 1\.7/
+    load File.dirname(__FILE__) + "/remote-services-settings17.ext"
+  elsif rel_info =~ /Version: 1\.6/
+    load File.dirname(__FILE__) + "/remote-services-settings16.ext"
+  else
+    $stderr.puts "Abiquo release version not found. Unsupported installation."
+    exit
   end
-
-  print_remote_services_settings
 end
