@@ -11,6 +11,16 @@ end
 
 include AETK::OutputFormatters
 
+begin
+  v = AETK::System.abiquo_version
+  if v != '1.7.5'
+    raise Exception.new
+  end
+rescue Exception
+  $stderr.puts 'This version of abicli only supports Abiquo 1.7.5. Use abiquo-etk <= 0.4.42'
+  exit 1
+end
+
 TOMCAT_SERVER_CONFIG='/opt/abiquo/tomcat/conf/Catalina/localhost/server.xml'
 TOMCAT_SERVER_BUILTIN_CONFIG='/opt/abiquo/tomcat/webapps/server/META-INF/context.xml'
 TOMCAT_API_CONFIG='/opt/abiquo/tomcat/conf/Catalina/localhost/api.xml'

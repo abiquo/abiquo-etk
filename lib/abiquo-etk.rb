@@ -168,6 +168,11 @@ module AETK
   end
 
   class System
+
+    def self.abiquo_version
+      File.read('/etc/abiquo-release').match(/Version:(.*)/)[1].to_s.strip.chomp
+    end
+
     def self.detect_install_type
       found = ['bpm-async', 'am', 'server'].each do |dir|
         break if not File.directory?(ABIQUO_BASE_DIR + "/tomcat/webapps/#{dir}")
@@ -197,12 +202,53 @@ module AETK
       return :unknown
 
     end
+
+    def self.detect_install_type2
+      itype = []
+      found = ['bpm-async', 'am', 'server'].each do |dir|
+        break if not File.directory?(ABIQUO_BASE_DIR + "/tomcat/webapps/#{dir}")
+      end
+      itype << :monolithic if found
+      
+      found = ['am', 'virtualfactory', 'bpm-async'].each do |dir|
+        break if not File.directory?(ABIQUO_BASE_DIR + "/tomcat/webapps/#{dir}")
+      end
+      itype << :rs_plus_v2v if found
+      
+      found = ['am', 'virtualfactory'].each do |dir|
+        break if not File.directory?(ABIQUO_BASE_DIR + "/tomcat/webapps/#{dir}")
+      end
+      itype << :remote_services if found
+      
+      found = ['server', 'api'].each do |dir|
+        break if not File.directory?(ABIQUO_BASE_DIR + "/tomcat/webapps/#{dir}")
+      end
+      itype << :server if found
+      
+      found = ['bpm-async'].each do |dir|
+        break if not File.directory?(ABIQUO_BASE_DIR + "/tomcat/webapps/#{dir}")
+      end
+      itype << :v2v if found
+
+      itype << :cloudnode_vbox if RPMUtils.rpm_installed?('abiquo-virtualbox')
+      itype << :cloudnode_kvm if RPMUtils.rpm_installed?('abiquo-cloud-node') and \
+        RPMUtils.rpm_installed?('kvm') and not RPMUtils.rpm_installed?('xen')
+      itype << :cloudnode_xen if RPMUtils.rpm_installed?('abiquo-cloud-node') and \
+        RPMUtils.rpm_installed?('xen')
+      
+      if itype.size > 0
+        itype
+      else
+        return [:unknown]
+      end
+    end
   end
 
 
   def self.load_plugins(extra_plugins_dir = nil)
     puts "Loading plugins...".yellow.bold
-    plugins = Dir[File.dirname(__FILE__) + '/checks/*.rb'].sort
+    version = System.abiquo_version
+    plugins = Dir[File.dirname(__FILE__) + "/checks/#{version}/*.rb"].sort
     if extra_plugins_dir and File.directory? extra_plugins_dir
       puts "Loading extra plugins...".yellow.bold
       plugins.concat( Dir[extra_plugins_dir + '/*.rb'].sort )

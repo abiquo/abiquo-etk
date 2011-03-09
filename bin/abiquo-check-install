@@ -1,0 +1,69 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'abiquo-etk'
+
+begin
+  v = AETK::System.abiquo_version
+  if v != '1.7.5'
+    raise Exception.new
+  end
+rescue Exception => e
+  $stderr.puts 'This version of abicli only supports Abiquo 1.7.5. Use abiquo-etk <= 0.4.42'
+  $stderr.puts "DEBUG: #{e.message}"
+  exit 1
+end
+
+if `whoami`.strip.chomp != 'root'
+  puts 'You need to run this as root.'
+  exit
+end
+
+begin
+  require 'lib/abiquo-etk'
+rescue LoadError
+  require 'rubygems'
+  require 'abiquo-etk'
+end
+
+class String
+  include Term::ANSIColor
+end
+
+class MyCLI
+  include Mixlib::CLI
+
+  option :debug,
+    :long  => "--debug",
+    :description => "Set the log level to debug",
+    #:required => true,
+    :proc => Proc.new { |l| AETK::Log.instance.level = Logger::DEBUG }
+  
+  option :extra_plugins,
+    :long => '--extra-plugins DIR',
+    :description => 'Extra plugins directory',
+    :default => nil
+
+  option :version,
+    :long => '--version',
+    :short => '-v',
+    :proc => Proc.new { puts "Abiquo Elite Toolkit Version " + File.read(File.dirname(__FILE__) + '/../VERSION') },
+    :exit => 0
+    
+  option :help,
+    :short => "-h",
+    :long => "--help",
+    :description => "Show this message",
+    :on => :tail,
+    :boolean => true,
+    :show_options => true,
+    :exit => 0
+
+end
+
+# ARGV = [ '-c', 'foo.rb', '-l', 'debug' ]
+cli = MyCLI.new
+cli.parse_options
+
+AETK.load_plugins(cli.config[:extra_plugins])
+include AETK::OutputFormatters
