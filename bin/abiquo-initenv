@@ -6,10 +6,22 @@ require 'abiquo-etk'
 def create_schemas(user = 'root', password = '')
   log = AETK::Log.instance
   cmd = ''
+
+  # if abiquo-server RPM not installed, return
+  `/bin/rpm -q abiquo-server`
+  if $? != 0
+    log.warn 'abiquo-server package not found. Skipping schema creation.'
+    return
+  end
   if password.strip.chomp.empty? 
     cmd = "mysql -u #{user} "
   else
     cmd = "mysql -u #{user} -p#{password} "
+  end
+  
+  if `#{cmd} -e 'show databases'` != 0
+    log.error "Can't access MySQL with username #{user}, password #{password}"
+    return
   end
 
   if `#{cmd} -e 'show databases'|grep kinton`.strip.chomp.empty?
@@ -110,11 +122,11 @@ begin
       script_file = File.dirname(__FILE__) + "/../lib/upgrades/#{upgrade_script.strip.chomp}"
       log.info "Using upgrade script #{script_file}"
       load script_file
+      log.info "Upgrade completed succesfully."
     else
       log.error "Invalid upgrade script found in .needsupgrade file. Aborting the upgrade"
     end
   end
-  log.info "Upgrade completed succesfully."
 rescue Exception => e
   log.error "Unknown error upgrading: #{e.message}"
   log.error "BACKTRACE: #{e.backtrace}"

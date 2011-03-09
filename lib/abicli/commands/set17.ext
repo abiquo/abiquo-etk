@@ -1,4 +1,6 @@
+#!/usr/bin/env ruby
 require 'iniparse'
+require 'uri'
 
 if not File.directory? ABIQUO_BASE_DIR
   $stderr.puts "\n'abicli set' command is used to configure the Abiquo Platform.\nUnfortunately, I can't find the Abiquo Platform installed in this server.\n\nTry other commands.\n\n"
@@ -54,12 +56,22 @@ def set_database_password(val)
 end
 
 def set_nfs_repository(val)
+  begin 
+    uri = URI.parse(val)
+    host = uri.host
+    path = uri.path
+    raise Exception.new if (path.nil? or host.nil?)
+  rescue
+    $stderr.puts 'ERROR: Invalid NFS/CIFS URI'
+    return
+  end
   config = IniParse.parse(File.read('/opt/abiquo/config/abiquo.properties'))
   config.save('/opt/abiquo/config/abiquo.properties.bak')
   config['remote-services']['abiquo.appliancemanager.repositoryLocation'] = val
   config['remote-services']['abiquo.virtualfactory.xenserver.repositoryLocation'] = val
   config['remote-services']['abiquo.virtualfactory.vmware.repositoryLocation'] = val
-  config['remote-services']['abiquo.virtualfactory.hyperv.repositoryLocation'] = val
+  cifs_uri = "//#{host}/#{path}"
+  config['remote-services']['abiquo.virtualfactory.hyperv.repositoryLocation'] = cifs_uri
   config.save('/opt/abiquo/config/abiquo.properties')
 end
 
@@ -116,7 +128,19 @@ $command_mappings = {
   'mail-server-user' => ['server', 'mail/user'],
   'mail-server-password' => ['server', 'mail/password'],
   'nfs-repository' => Proc.new { |val| set_nfs_repository(val) },
-  'cifs-repository' => ['virtualfactory', 'hypervisors/hyperv/destinationRepositoryPath'],
+  'cifs-repository' => Proc.new do |val|
+      begin 
+        uri = URI.parse(val)
+        host = uri.host
+        path = uri.path
+        raise Exception.new if (path.nil? or host.nil?)
+        cifs_uri = "//#{host}/#{path}"
+        set_property 'remote-services', 'abiquo.virtualfactory.hyperv.repositoryLocation', cifs_uri
+      rescue Exception => e
+        $stderr.puts 'ERROR: Invalid NFS/CIFS URI'
+        $stderr.puts "DEBUG: #{e.message}"
+      end
+  end,
   'storagelink-address' => Proc.new do |val| 
     if get_property 'remote-services', 'abiquo.virtualfactory.storagelink.address'
       set_property('remote-services', 'abiquo.virtualfactory.storagelink.address', val)
