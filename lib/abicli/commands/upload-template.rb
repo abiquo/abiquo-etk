@@ -39,7 +39,7 @@ if ARGV[0] == 'upload-template'
               parts << StringPart.new("\r\n")
             else
               parts << StringPart.new( "--" + boundary + "\r\n" +
-                                       "Content-Disposition: form-data; name=\"" + key.to_s + "\"\r\n\r\n")
+                                       "Content-Disposition: form-data; Content-Type:application/json; name=\"" + key.to_s + "\"\r\n\r\n")
               parts << StringPart.new(value.to_s + "\r\n")
             end
           end
@@ -149,19 +149,49 @@ if ARGV[0] == 'upload-template'
   class MyCLI
     include Mixlib::CLI
 
-    option :enterprise_id,
-      :long => '--enterprise-id USER',
-      :description => 'Enterprise ID',
-      :default => 1
-
+    # Mandatory values
     option :name,
       :long => '--name NAME',
       :description => 'Template Name'
 
+    option :enterprise_id,
+      :long => '--enterprise-id USER',
+      :description => 'Enterprise ID'
+
     option :disk_file,
       :long => '--disk-file FILE',
       :description => 'Virtual disk file to upload'
+
+    option :disk_name,
+      :long => '--disk-name NAME',
+      :description => 'The name that will have the disk in the target repository (use the extension is encouraged)'
+
+    option :rs_url,
+      :long => '--rs-url URL',
+      :description => 'Remote Services URL (i.e. http://remote-services-ip)'
+
+    # Mandatory values with default values
+    option :disk_format,
+      :long => '--disk-format FORMAT',
+      :description => 'Disk Format type. Default: QCOW2_SPARSE',
+      :default => 'QCOW2_SPARSE'  
     
+    option :cpus,
+      :long => '--cpus NUMBER',
+      :description => 'Number of CPUs for the template. Default 1',
+      :default => 1
+
+    option :disk_capacity,
+      :long => '--disk-capacity NUMBER',
+      :description => 'Virtual Disk Capacity (in bytes). Default 20GB',
+      :default => 21474836480
+
+    option :memory,
+      :long => '--memory NUMBER',
+      :description => 'Template memory (in bytes). Default 512M',
+      :default => 524288
+
+    # Optional values
     option :category,
       :long => '--category CAT',
       :description => 'Template Category Name',
@@ -177,31 +207,12 @@ if ARGV[0] == 'upload-template'
       :description => 'Template Icon URL',
       :default => 'http://icons.abiquo.com/abiquo.png'
 
-    option :cpus,
-      :long => '--cpus NUMBER',
-      :description => 'Number of CPUs for the template',
-      :default => 1
-
-    option :disk_capacity,
-      :long => '--disk-capacity NUMBER',
-      :description => 'Virtual Disk Capacity (in bytes). Default 20GB',
-      :default => 21474836480
-
-    option :memory,
-      :long => '--memory NUMBER',
-      :description => 'Template memory (in bytes). Default 512M',
-      :default => 524288
-
-    option :rs_url,
-      :long => '--rs-url URL',
-      :description => 'Remote Services URL (i.e. http://remote-services-ip)'
-
+    # Help actions
     option :debug,
       :long => '--debug',
       :description => 'Print debugging output',
       :default => false
 
-    
     option :help,
       :short => "-h",
       :long => "--help",
@@ -227,21 +238,38 @@ if ARGV[0] == 'upload-template'
   rs_url = cli.config[:rs_url]
   if rs_url.nil?
     $stderr.puts "\n --rs-url is required.\n\n"
+    puts cli.opt_parser.help
     exit 1
   end
   tname = cli.config[:name]
   if tname.nil?
     $stderr.puts "\n --name is required.\n\n"
+    puts cli.opt_parser.help
     exit 1
+  end
+  ent = cli.config[:enterprise_id]
+  if ent.nil?
+    $stderr.puts "\n --enterprise-id is required.\n\n"
+    puts cli.opt_parser.help
+    exit 1
+  end
+  disk_name = cli.config[:disk_name]
+  if disk_name.nil?
+      splitted_disk = file.split("/")
+      disk_name = splitted_disk[splitted_disk.size-1]
+      puts disk_name
   end
 
   fo = File.new(file)
   fsize = File.size(file)
   count = 0
-json = """{
+json = """{'ovfPackageInstanceDto':{
 'idEnterprise':#{cli.config[:enterprise_id]},
 'ovfUrl':'http://upload/#{cli.config[:name]}/#{cli.config[:name]}.ovf',
-'diskFileFormat':'VMDK_STREAM_OPTIMIZED',
+'diskFileFormat':'#{cli.config[:disk_format]}',
+'ramSizeUnit':'BYTE',
+'hdSizeUnit':'BYTE',
+'diskFilePath':'#{disk_name}',
 'name':'#{cli.config[:name]}',
 'description':'#{cli.config[:description]}',
 'categoryName':'#{cli.config[:category]}',
@@ -249,11 +277,11 @@ json = """{
 'cpu':#{cli.config[:cpus]},
 'hd':#{cli.config[:disk_capacity]},
 'ram':#{cli.config[:memory]}
-}"""
+}}"""
   json.gsub!("'",'"')
   $stdout.sync = true
   line_reset = "\r\e[0K" 
-  rsurl = "#{cli.config[:rs_url]}/am/er/#{cli.config[:enterprise_id]}/ovf/upload"
+  rsurl = "#{cli.config[:rs_url]}/am/erepos/#{cli.config[:enterprise_id]}/ovfs"
   if cli.config[:debug]
     puts "Upload URL: #{rsurl}"
     puts "JSON sent:\n#{json}"
