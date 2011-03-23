@@ -75,31 +75,16 @@ def set_nfs_repository(val)
   config.save('/opt/abiquo/config/abiquo.properties')
 end
 
-def set_ontap_server_ip(val)
-  f = ABIQUO_BASE_DIR + '/ontap/tomcat/webapps/ROOT/WEB-INF/classes/config.xml'
-  if File.exist? f
-    config_set_node(f, 'filer/host', val, true)
-  else
-    $stderr.puts "NetApp Ontap Connector not installed. Ignoring the order."
-  end
-end
-
 def set_ontap_user(val)
-  f = ABIQUO_BASE_DIR + '/ontap/tomcat/webapps/ROOT/WEB-INF/classes/config.xml'
-  if File.exist? f
-    config_set_node(f, 'filer/user', val, true)
-  else
-    $stderr.puts "NetApp Ontap Connector not installed. Ignoring the order."
-  end
+  config = IniParse.parse(File.read('/opt/abiquo/config/abiquo.properties'))
+  config['remote-services']['abiquo.storagemanager.netapp.user'] = val
+  config.save('/opt/abiquo/config/abiquo.properties')
 end
 
 def set_ontap_password(val)
-  f = ABIQUO_BASE_DIR + '/ontap/tomcat/webapps/ROOT/WEB-INF/classes/config.xml'
-  if File.exist? f
-    config_set_node(f, 'filer/password', val, true)
-  else
-    $stderr.puts "NetApp Ontap Connector not installed. Ignoring the order."
-  end
+  config = IniParse.parse(File.read('/opt/abiquo/config/abiquo.properties'))
+  config['remote-services']['abiquo.storagemanager.netapp.password'] = val
+  config.save('/opt/abiquo/config/abiquo.properties')
 end
 
 def set_property(section, key, val)
@@ -160,8 +145,7 @@ $command_mappings = {
   'database-user' => Proc.new { |val| set_database_user(val) },
   'database-password' => Proc.new { |val| set_database_password(val) },
   'ontap-user' => Proc.new { |val| set_ontap_user(val) },
-  'ontap-password' => Proc.new { |val| set_ontap_password(val) },
-  'ontap-server-ip' => Proc.new { |val| set_ontap_server_ip(val) }
+  'ontap-password' => Proc.new { |val| set_ontap_password(val) }
 }
 
 def mapping_exist?(key)

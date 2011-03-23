@@ -7,7 +7,7 @@ if ARGV[0] == 'set'
 
   begin
     v = AETK::System.abiquo_version
-    if v != '1.7.5'
+    if v !~ /1\.7\.5/
       raise Exception.new
     end
   rescue Exception
