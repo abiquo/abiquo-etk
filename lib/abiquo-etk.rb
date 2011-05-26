@@ -247,7 +247,7 @@ module AETK
 
   def self.load_plugins(extra_plugins_dir = nil)
     puts "Loading plugins...".yellow.bold
-    version = System.abiquo_version.gsub(/-(rc\d|ga|final|beta|preview|alpha)/i,'')
+    version = System.abiquo_version.gsub(/-(rc\d|ga|final|beta|preview|alpha|hf).*/i,'')
     plugins = Dir[File.dirname(__FILE__) + "/checks/#{version}/*.rb"].sort
     if extra_plugins_dir and File.directory? extra_plugins_dir
       puts "Loading extra plugins...".yellow.bold

@@ -7,11 +7,11 @@ if ARGV[0] == 'set'
 
   begin
     v = AETK::System.abiquo_version
-    if v !~ /1\.7\.5/
+    if v !~ /1\.7\.\d/
       raise Exception.new
     end
   rescue Exception
-    $stderr.puts 'This version of abicli only supports Abiquo 1.7.5. Use abiquo-etk <= 0.4.42'
+    $stderr.puts 'This version of abicli only supports Abiquo 1.7.X. Use abiquo-etk <= 0.4.42'
     exit 1
   end
 
