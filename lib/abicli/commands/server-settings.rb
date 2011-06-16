@@ -9,6 +9,8 @@ if ARGV[0] == 'server-settings'
     load File.dirname(__FILE__) + "/server-settings17.ext"
   elsif rel_info =~ /Version: 1\.6/
     load File.dirname(__FILE__) + "/server-settings168.ext"
+  elsif rel_info =~ /Version: 1\.8/
+    load File.dirname(__FILE__) + "/server-settings18.ext"
   else
     $stderr.puts "Abiquo release version not found. Unsupported installation."
     exit

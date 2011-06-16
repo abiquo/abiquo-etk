@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+require 'iniparse'
+
+settings_file = "#{ABIQUO_BASE_DIR}/config/abiquo.properties"
+
+if File.exist? settings_file
+  
+  begin
+    ini = IniParse.parse File.read(settings_file)
+    raise Exception.new('Missing [remote-services] section') if ini['remote-services'].nil?
+    
+    puts "\nAbiquo Remote Services Configuration"
+    puts "-------------------------------------\n\n"
+
+    File.read(settings_file).each_line do |l|
+      next if l =~ /\[.*?\]/
+      puts l
+    end
+  rescue Exception => e
+    puts "Invalid properties file. Missing [remote-services] section?"
+    puts "DEBUG: #{e.message}"
+  end
+else
+  $stderr.puts "abiquo.properties file not found. Cannot retrieve properties."
+end

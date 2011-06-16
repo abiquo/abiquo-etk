@@ -5,12 +5,11 @@ require 'abiquo-etk'
 
 begin
   v = AETK::System.abiquo_version
-  if v !~ /1\.7\.\d/
+  if v !~ /1\.8(\.\d)?/
     raise Exception.new
   end
 rescue Exception => e
-  $stderr.puts 'This version of abicli only supports Abiquo 1.7.X. Use abiquo-etk <= 0.4.42'
-  $stderr.puts "DEBUG: #{e.message}"
+  $stderr.puts 'This version of abicli only supports Abiquo 1.8.X'
   exit 1
 end
 
