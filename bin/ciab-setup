@@ -1,0 +1,33 @@
+#!/usr/bin/env ruby
+require 'socket'
+require 'socket'
+
+# 
+# http://coderrr.wordpress.com/2008/05/28/get-your-local-ip-address/
+#
+def local_ip
+  orig, Socket.do_not_reverse_lookup = Socket.do_not_reverse_lookup, true  # turn off reverse DNS resolution temporarily
+  UDPSocket.open do |s|
+    s.connect '64.233.187.99', 1
+    s.addr.last
+  end
+ensure
+  Socket.do_not_reverse_lookup = orig
+end
+
+ip = ''
+begin
+  ip = local_ip
+rescue Exception => e
+  puts "Could not automatically detect the IP of this host."
+  print "Type the IP address of this host: "
+  ip = $stdin.gets.strip.chomp
+  puts "Using #{ip} as the Cloud in a Box host address"
+end
+
+puts "Configuring the Cloud in a Box install..."
+puts "Setting nfs-repository to: #{ip}:/opt/vm_repository"
+`abicli set nfs-repository #{ip}:/opt/vm_repository`
+puts "Setting AIM redis host to: #{ip}"
+`abicli set aim-redis-host #{ip}`
+puts "Done!"
