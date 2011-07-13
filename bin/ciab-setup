@@ -30,4 +30,7 @@ puts "Setting nfs-repository to: #{ip}:/opt/vm_repository"
 `abicli set nfs-repository #{ip}:/opt/vm_repository`
 puts "Setting AIM redis host to: #{ip}"
 `abicli set aim-redis-host #{ip}`
+puts "Restarting services..."
+`service abiquo-tomcat restart > /dev/null 2>&1`
+`service abiquo-aim restart > /dev/null 2>&1`
 puts "Done!"
