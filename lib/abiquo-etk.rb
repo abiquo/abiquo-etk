@@ -170,7 +170,7 @@ module AETK
   class System
 
     def self.abiquo_version
-      File.read('/etc/abiquo-release').match(/Version:(.*)/)[1].to_s.strip.chomp
+      File.read('/etc/abiquo-release').match(/Version:(.*)/)[1].strip.split(/(-|\s)/)[0].to_s.strip.chomp rescue nil
     end
 
     def self.detect_install_type
@@ -247,7 +247,7 @@ module AETK
 
   def self.load_plugins(extra_plugins_dir = nil)
     puts "Loading plugins...".yellow.bold
-    version = System.abiquo_version.gsub(/-(rc\d|ga|final|beta|preview|alpha|hf).*/i,'')
+    version = System.abiquo_version
     plugins = Dir[File.dirname(__FILE__) + "/checks/#{version}/*.rb"].sort
     if extra_plugins_dir and File.directory? extra_plugins_dir
       puts "Loading extra plugins...".yellow.bold
