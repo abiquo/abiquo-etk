@@ -73,7 +73,6 @@ def set_nfs_repository(val)
   config.save('/opt/abiquo/config/abiquo.properties.bak')
   config['remote-services']['abiquo.appliancemanager.repositoryLocation'] = val
   config['remote-services']['abiquo.virtualfactory.xenserver.repositoryLocation'] = val
-  config['remote-services']['abiquo.virtualfactory.vmware.repositoryLocation'] = val
   config.save('/opt/abiquo/config/abiquo.properties')
 end
 
