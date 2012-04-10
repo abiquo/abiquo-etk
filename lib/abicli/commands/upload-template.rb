@@ -281,14 +281,14 @@ json = """{'ovfPackageInstanceDto':{
   json.gsub!("'",'"')
   $stdout.sync = true
   line_reset = "\r\e[0K" 
-  rsurl = "#{cli.config[:rs_url]}/am/erepos/#{cli.config[:enterprise_id]}/ovfs"
+  rsurl = "#{cli.config[:rs_url]}/am/erepos/#{cli.config[:enterprise_id]}/templates"
   if cli.config[:debug]
     puts "Upload URL: #{rsurl}"
     puts "JSON sent:\n#{json}"
   end
   StreamingUploader.post(
     rsurl,
-    { :ovfpackageinstance => json, :diskFile => fo }
+    { :aovfpackageinstance => json, :diskFile => fo }
   ) do |size|
     count += size
     per = (100*count)/fsize 
