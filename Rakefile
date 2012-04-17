@@ -16,6 +16,7 @@ begin
     gem.add_dependency(%q<term-ansicolor>, [">= 1.0"])
     gem.add_dependency(%q<mixlib-cli>, [">= 1.2"])
     gem.add_dependency(%q<iniparse>, [">= 1.1.4"])
+    gem.add_dependency(%q<abiquo>, [">= 0.1.2"])
     gem.files.include %w(
       scripts/*
       lib/**/*

@@ -1,0 +1,39 @@
+=Abiquo API Ruby client
+
+Rest client to work with the Abiquo's API.
+
+==Installation
+
+gem install abiquo
+
+==Usage
+
+The first version of the api just uses basic authentication, so we need to create an instance with our credentials:
+
+  auth = Abiquo::BasicAuth.new('Abiquo', 'username', 'password')
+
+The entry point for the Abiquo's API is an atom document service:
+
+  api = Abiquo::Resource('http://abiquo.example.com/api', auth)
+
+from this point we can access to every resource exposed by the api calling nested methods:
+
+  datacenters = api.datacenters
+  racks = api.datacenters.first.racks
+
+or get the values of their elements:
+
+  datacenter = api.datacenters.first
+  datacenter.name  # => The name of the datacenter
+
+You can find further example into the specs:
+
+  http://github.com/abiquo/api_ruby_client/tree/master/spec/acceptance
+
+Further documentation of the API can be found in our wiki:
+
+  http://abicloud.org/display/ABI16/Abiquo's+API
+
+==Copyright
+
+Copyright (c) 2010 Abiquo Holdings. See LICENSE for details.
