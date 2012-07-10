@@ -12,6 +12,10 @@ if ARGV[0] == 'set'
     load File.dirname(__FILE__) + "/set168.ext"
   elsif rel_info =~ /Version: 1\.8/
     load File.dirname(__FILE__) + "/set18.ext"
+  elsif rel_info =~ /Version: 2\.0/
+    load File.dirname(__FILE__) + "/set20.ext"
+  elsif rel_info =~ /Version: 2\.2/
+    load File.dirname(__FILE__) + "/set22.ext"
   else
     $stderr.puts "Abiquo release version not found. Unsupported installation."
     exit

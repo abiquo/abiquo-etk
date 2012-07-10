@@ -3,7 +3,7 @@ require 'abiquo'
 require 'pp'
 
 auth = Abiquo::BasicAuth.new('Abiquo', 'admin', 'xabiquo')
-api = Abiquo::Resource('http://abiquo-server-ip:8080/api', auth)
+api = Abiquo::Resource('http://10.60.1.65/api', auth)
 
 
 #
