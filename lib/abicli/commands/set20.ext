@@ -1,0 +1,215 @@
+#!/usr/bin/env ruby
+require 'iniparse'
+require 'uri'
+
+if not File.directory? ABIQUO_BASE_DIR
+  $stderr.puts "\n'abicli set' command is used to configure the Abiquo Platform.\nUnfortunately, I can't find the Abiquo Platform installed in this server.\n\nTry other commands.\n\n"
+  help
+  exit 1
+end
+
+def set_database_host(val)
+  url = "jdbc:mysql://#{val}:3306/kinton?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF8"
+  [TOMCAT_API_BUILTIN_CONFIG, TOMCAT_API_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'url', url, true)
+    end
+  end
+  
+  [TOMCAT_SERVER_CONFIG, TOMCAT_SERVER_BUILTIN_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'url', url,true)
+      config_set_attribute(f, 'Resource[@name="jdbc/heartbeatDB"]', 'url', url, true)
+    end
+  end
+  set_property('server', 'abiquo.database.host', val)
+end
+
+def set_database_user(val)
+  [TOMCAT_API_BUILTIN_CONFIG, TOMCAT_API_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'username', val, true)
+    end
+  end
+  [TOMCAT_SERVER_CONFIG, TOMCAT_SERVER_BUILTIN_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'username', val, true)
+      config_set_attribute(f, 'Resource[@name="jdbc/heartbeatDB"]', 'username', val, true)
+    end
+  end
+  set_property('server', 'abiquo.database.user', val)
+end
+
+def set_database_password(val)
+  [TOMCAT_API_BUILTIN_CONFIG, TOMCAT_API_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'password', val, true)
+    end
+  end
+  [TOMCAT_SERVER_CONFIG, TOMCAT_SERVER_BUILTIN_CONFIG].each do |f|
+    if File.exist?(f)
+      config_set_attribute(f, 'Resource[@name="jdbc/abiquoDB"]', 'password', val, true)
+      config_set_attribute(f, 'Resource[@name="jdbc/heartbeatDB"]', 'password', val, true)
+    end
+  end
+  set_property('server', 'abiquo.database.password', val)
+end
+
+def set_nfs_repository(val)
+  begin 
+    nfs_url = val
+    if nfs_url !~ /^nfs:\/\//
+      nfs_url = "nfs://#{val}"
+    end
+    uri = URI.parse(nfs_url)
+    host = uri.host
+    path = uri.path
+    raise Exception.new if (path.nil? or host.nil?)
+  rescue
+    $stderr.puts 'ERROR: Invalid NFS/CIFS URI'
+    return
+  end
+  config = IniParse.parse(File.read('/opt/abiquo/config/abiquo.properties'))
+  config.save('/opt/abiquo/config/abiquo.properties.bak')
+  config['remote-services']['abiquo.appliancemanager.repositoryLocation'] = val
+  config['remote-services']['abiquo.virtualfactory.xenserver.repositoryLocation'] = val
+  config.save('/opt/abiquo/config/abiquo.properties')
+end
+
+def set_cifs_repository(val)
+  begin 
+    cifs_url = val
+    if cifs_url !~ /^cifs:/
+      cifs_url = "cifs:#{val}"
+    end
+    uri = URI.parse(cifs_url)
+    host = uri.host
+    path = uri.path
+    raise Exception.new if (path.nil? or host.nil?)
+  rescue
+    $stderr.puts 'ERROR: Invalid NFS/CIFS URI'
+    return
+  end
+  config = IniParse.parse(File.read('/opt/abiquo/config/abiquo.properties'))
+  config.save('/opt/abiquo/config/abiquo.properties.bak')
+  cifs_uri = "//#{host}#{path}"
+  config['remote-services']['abiquo.virtualfactory.hyperv.repositoryLocation'] = cifs_uri
+  config.save('/opt/abiquo/config/abiquo.properties')
+end
+
+def set_aim_redis_host(val)
+  if not File.exist? '/etc/abiquo-aim.ini'
+    raise Exception.new('Abiquo AIM config file not available')
+  end
+  config = IniParse.parse(File.read('/etc/abiquo-aim.ini'))
+  config.save('/etc/abiquo-aim.ini.bak')
+  if config['monitor'].nil?
+    raise Exception.new('Invalid Abiquo AIM config file')
+  end
+  config['monitor']['redisHost'] = val
+  config.save('/etc/abiquo-aim.ini')
+end
+
+def set_ontap_user(val)
+  config = IniParse.parse(File.read('/opt/abiquo/config/abiquo.properties'))
+  config['remote-services']['abiquo.storagemanager.netapp.user'] = val
+  config.save('/opt/abiquo/config/abiquo.properties')
+end
+
+def set_ontap_password(val)
+  config = IniParse.parse(File.read('/opt/abiquo/config/abiquo.properties'))
+  config['remote-services']['abiquo.storagemanager.netapp.password'] = val
+  config.save('/opt/abiquo/config/abiquo.properties')
+end
+
+def set_property(section, key, val)
+  config = IniParse.parse(File.read('/opt/abiquo/config/abiquo.properties'))
+  config.save('/opt/abiquo/config/abiquo.properties.bak')
+  config[section][key] = val
+  config.save('/opt/abiquo/config/abiquo.properties')
+end
+
+def get_property(section, key)
+  config = IniParse.parse(File.read('/opt/abiquo/config/abiquo.properties'))
+  config[section][key] rescue nil
+end
+
+$command_mappings = {
+  'rabbitmq-host' => Proc.new do |val| 
+    if get_property('remote-services', 'abiquo.rabbitmq.host')
+      set_property('remote-services', 'abiquo.rabbitmq.host', val)
+    end
+    if get_property('server', 'abiquo.rabbitmq.host')
+      set_property('server', 'abiquo.rabbitmq.host', val)
+    end
+  end,
+  'session-timeout' => ['server', 'sessionTimeout'],
+  'mail-server' => ['server', 'mail/server'],
+  'mail-server-user' => ['server', 'mail/user'],
+  'mail-server-password' => ['server', 'mail/password'],
+  'nfs-repository' => Proc.new { |val| set_nfs_repository(val) },
+  'cifs-repository' => Proc.new do |val|
+      set_cifs_repository val
+  end,
+  'storagelink-address' => Proc.new do |val| 
+    if get_property 'remote-services', 'abiquo.virtualfactory.storagelink.address'
+      set_property('remote-services', 'abiquo.virtualfactory.storagelink.address', val)
+    end
+  end,
+  'storagelink-user' => Proc.new do |val| 
+    if get_property 'remote-services', 'abiquo.virtualfactory.storagelink.user'
+      set_property('remote-services', 'abiquo.virtualfactory.storagelink.user', val)
+    end
+  end,
+  'storagelink-password' => Proc.new do |val| 
+    if get_property 'remote-services', 'abiquo.virtualfactory.storagelink.password'
+      set_property('remote-services', 'abiquo.virtualfactory.storagelink.password', val)
+    end
+  end,
+  'database-host' => Proc.new { |val| set_database_host(val) },
+  'database-user' => Proc.new { |val| set_database_user(val) },
+  'database-password' => Proc.new { |val| set_database_password(val) },
+  'ontap-user' => Proc.new { |val| set_ontap_user(val) },
+  'ontap-password' => Proc.new { |val| set_ontap_password(val) },
+  'aim-redis-host' => Proc.new { |val| set_aim_redis_host(val) }
+}
+
+def mapping_exist?(key)
+  $command_mappings.has_key? key
+end
+
+def mapping_has_proc?(comp)
+  $command_mappings[comp].is_a? Proc
+end
+
+def help
+  puts "\nSet Abiquo Platform properties\n\n"
+  puts "Available subcommands:"
+  $command_mappings.keys.sort.each do |cmd,proc|
+    puts "  #{cmd}"
+  end
+end
+
+
+comp = ARGV[1]
+path = ARGV[2]
+val = ARGV[3]
+file = nil
+begin
+  if mapping_exist? comp
+    val = path
+    if mapping_has_proc? comp
+      $command_mappings[comp].call(val)
+    else
+      comp, path = $command_mappings[comp]
+    end
+  else
+    help
+  end
+rescue NoMethodError => e
+  $stderr.puts e.message
+  $stderr.puts e.backtrace
+  $stderr.puts "\nproperty not found in component #{comp.bold}\n\n"
+rescue Exception => e
+    $stderr.puts e.message
+end
