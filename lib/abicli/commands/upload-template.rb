@@ -288,7 +288,7 @@ json = """{'ovfPackageInstanceDto':{
   end
   StreamingUploader.post(
     rsurl,
-    { :aovfpackageinstance => json, :diskFile => fo }
+    { :diskInfo => json, :diskFile => fo }
   ) do |size|
     count += size
     per = (100*count)/fsize 
