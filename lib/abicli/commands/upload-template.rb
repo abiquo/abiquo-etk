@@ -263,13 +263,27 @@ if ARGV[0] == 'upload-template'
   fo = File.new(file)
   fsize = File.size(file)
   count = 0
-json = """{'ovfPackageInstanceDto':{
+# Old json format
+# json = """{'ovfPackageInstanceDto':{
+# 'idEnterprise':#{cli.config[:enterprise_id]},
+# 'ovfUrl':'http://upload/#{cli.config[:name]}/#{cli.config[:name]}.ovf',
+# 'diskFileFormat':'#{cli.config[:disk_format]}',
+# 'ramSizeUnit':'BYTE',
+# 'hdSizeUnit':'BYTE',
+# 'diskFilePath':'#{disk_name}',
+# 'name':'#{cli.config[:name]}',
+# 'description':'#{cli.config[:description]}',
+# 'categoryName':'#{cli.config[:category]}',
+# 'iconPath':'#{cli.config[:icon_url]}',
+# 'cpu':#{cli.config[:cpus]},
+# 'hd':#{cli.config[:disk_capacity]},
+# 'ram':#{cli.config[:memory]}
+# }}"""
+json = """{
 'idEnterprise':#{cli.config[:enterprise_id]},
 'ovfUrl':'http://upload/#{cli.config[:name]}/#{cli.config[:name]}.ovf',
-'diskFileFormat':'#{cli.config[:disk_format]}',
-'ramSizeUnit':'BYTE',
-'hdSizeUnit':'BYTE',
 'diskFilePath':'#{disk_name}',
+'diskFileFormat':'#{cli.config[:disk_format]}',
 'name':'#{cli.config[:name]}',
 'description':'#{cli.config[:description]}',
 'categoryName':'#{cli.config[:category]}',
@@ -277,7 +291,7 @@ json = """{'ovfPackageInstanceDto':{
 'cpu':#{cli.config[:cpus]},
 'hd':#{cli.config[:disk_capacity]},
 'ram':#{cli.config[:memory]}
-}}"""
+}"""
   json.gsub!("'",'"')
   $stdout.sync = true
   line_reset = "\r\e[0K" 

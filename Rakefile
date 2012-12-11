@@ -9,7 +9,7 @@ begin
     gem.description = %Q{Tools to troubleshoot and manage your Abiquo installation}
     gem.email = "srubio@abiquo.com"
     gem.homepage = "http://github.com/abiquo/abiquo-etk"
-    gem.authors = ["Sergio Rubio"]
+    gem.authors = ["Sergio Rubio","Abel Boldu"]
     gem.version = File.read 'VERSION'
     gem.add_dependency(%q<nokogiri>, [">= 1.3"])
     gem.add_dependency(%q<rpm-utils>, [">= 0.1"])
